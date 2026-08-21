@@ -12,14 +12,14 @@ const wss = new WebSocket.Server({ server });
 
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, '..', 'data');
+const PAPER_TRADES_MICRO_PATH = path.join(DATA_DIR, 'paper_trades_micro.ndjson');
 const PAPER_TRADES_1SOL_PATH = path.join(DATA_DIR, 'paper_trades_1sol.ndjson');
 const PAPER_TRADES_10SOL_PATH = path.join(DATA_DIR, 'paper_trades_10sol.ndjson');
-const PAPER_TRADES_V2_PATH = path.join(DATA_DIR, 'paper_trades_v2.ndjson');
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-let liveSolPrice = 85.85;
+let liveSolPrice = 88.50;
 
 function fetchLiveSolPrice() {
     https.get('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT', { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
@@ -124,7 +124,7 @@ function parseLogFile(filePath, initialBalance) {
 
 // Global System Metrics
 let systemState = {
-    sol_price_usd: 85.85,
+    sol_price_usd: 88.50,
     jito_latency_ms: 11.3,
     server_uptime_sec: 0,
     cpu_usage_pct: 0,
@@ -288,9 +288,9 @@ if (fs.existsSync(DATA_DIR)) {
 function getAllStats() {
     return {
         system: systemState,
+        instance_micro: parseLogFile(PAPER_TRADES_MICRO_PATH, 0.38),
         instance_1sol: parseLogFile(PAPER_TRADES_1SOL_PATH, 1.0),
-        instance_10sol: parseLogFile(PAPER_TRADES_10SOL_PATH, 10.0),
-        instance_v2: parseLogFile(PAPER_TRADES_V2_PATH, 10.0)
+        instance_10sol: parseLogFile(PAPER_TRADES_10SOL_PATH, 10.0)
     };
 }
 
@@ -307,5 +307,5 @@ wss.on('connection', (ws) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Solana Dual-Engine Multi-DEX Monitor running on http://0.0.0.0:${PORT}`);
+    console.log(`🚀 Solana Triple-Engine Multi-DEX Monitor running on http://0.0.0.0:${PORT}`);
 });

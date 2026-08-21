@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solana Live Multi-DEX Dual-Engine Arbitrage Terminal</title>
+    <title>Solana Live Multi-DEX Triple-Engine Arbitrage Terminal</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -18,7 +18,8 @@
                         solanaGreen: '#14f195',
                         solanaPurple: '#9945ff',
                         neonBlue: '#38bdf8',
-                        dangerRed: '#f43f5e'
+                        dangerRed: '#f43f5e',
+                        goldAmber: '#fbbf24'
                     },
                     fontFamily: {
                         mono: ['JetBrains Mono', 'Fira Code', 'monospace']
@@ -58,8 +59,8 @@
             </div>
             <div>
                 <h1 class="text-base md:text-lg font-bold tracking-wider flex items-center gap-2">
-                    SOLANA REAL DUAL-ENGINE ARBITRAGE TERMINAL
-                    <span class="text-[10px] px-2 py-0.5 rounded bg-solanaPurple/20 text-solanaPurple border border-solanaPurple/30 font-bold">Dual Instance Active</span>
+                    SOLANA REAL TRIPLE-ENGINE ARBITRAGE TERMINAL
+                    <span class="text-[10px] px-2 py-0.5 rounded bg-solanaPurple/20 text-solanaPurple border border-solanaPurple/30 font-bold">3 Instances Online</span>
                 </h1>
                 <p class="text-[11px] text-gray-400">Comparing live prices across Raydium ⚡ Meteora ⚡ PumpSwap ⚡ Orca</p>
             </div>
@@ -70,7 +71,7 @@
             <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-950/40 border border-yellow-500/30">
                 <i data-lucide="coins" class="w-3.5 h-3.5 text-yellow-400"></i>
                 <span class="text-gray-400">SOL:</span>
-                <span id="sol-price" class="font-bold text-yellow-400">$85.85</span>
+                <span id="sol-price" class="font-bold text-yellow-400">$88.50</span>
             </div>
 
             <!-- Region Badge -->
@@ -97,20 +98,24 @@
 
     <!-- INSTANCE SELECTOR TABS -->
     <div class="flex flex-wrap items-center justify-between gap-3 bg-darkCard border border-darkBorder rounded-xl p-2 px-4 shadow-md">
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
             <span class="text-xs text-gray-400 font-bold uppercase tracking-wider mr-2">Select Instance:</span>
-            <button id="tab-1sol" onclick="switchInstance('1sol')" class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-solanaGreen text-black shadow-lg">
-                <i data-lucide="shield" class="w-3.5 h-3.5"></i>
-                ⚡ 1.0 SOL Instance (Conservative)
+            <button id="tab-micro" onclick="switchInstance('micro')" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-yellow-400 text-black shadow-lg">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                ⚡ $35 USD (0.38 SOL Micro-Pilot)
             </button>
-            <button id="tab-10sol" onclick="switchInstance('10sol')" class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-darkBg border border-darkBorder text-gray-400 hover:text-white">
+            <button id="tab-1sol" onclick="switchInstance('1sol')" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-darkBg border border-darkBorder text-gray-400 hover:text-white">
+                <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+                ⚡ 1.0 SOL Instance
+            </button>
+            <button id="tab-10sol" onclick="switchInstance('10sol')" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-darkBg border border-darkBorder text-gray-400 hover:text-white">
                 <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-                ⚡ 10.0 SOL Instance (Growth)
+                ⚡ 10.0 SOL Instance
             </button>
         </div>
         <div class="text-[11px] text-gray-400 flex items-center gap-2">
-            <span id="active-instance-label" class="text-solanaGreen font-bold">1.0 SOL Runway Mode</span>
-            <span>• Atomic 2-Leg Invariant Guarantee</span>
+            <span id="active-instance-label" class="text-yellow-400 font-bold">$35 USD Micro-Pilot Mode</span>
+            <span>• Single-Trade Lock (0.12 SOL)</span>
         </div>
     </div>
 
@@ -124,11 +129,11 @@
             </div>
             <div class="mt-2">
                 <div class="text-2xl font-black text-white flex items-baseline gap-1">
-                    <span id="stat-balance">1.0000</span>
+                    <span id="stat-balance">0.3800</span>
                     <span class="text-xs text-solanaPurple font-normal">SOL</span>
                 </div>
                 <div class="text-xs text-gray-400 mt-1 flex items-center justify-between">
-                    <span id="stat-balance-usd">≈ $85.85 USD</span>
+                    <span id="stat-balance-usd">≈ $33.63 USD</span>
                     <span class="text-emerald-400 text-[10px]">Real-Time Sync</span>
                 </div>
             </div>
@@ -164,7 +169,7 @@
                     <span class="text-xs text-gray-400 font-normal ml-1">(<span id="stat-wins">0</span> / <span id="stat-total">0</span>)</span>
                 </div>
                 <div class="text-xs text-gray-400 mt-1 flex items-center justify-between">
-                    <span id="stat-trigger-label">Max Pos: <span class="text-solanaGreen font-bold">0.12 SOL</span></span>
+                    <span id="stat-trigger-label">Spread Floor: <span class="text-yellow-400 font-bold">+0.80% Net</span></span>
                     <span class="text-neonBlue text-[10px]">Zero Capital Risk</span>
                 </div>
             </div>
@@ -234,7 +239,7 @@
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-xs font-bold text-gray-300 flex items-center gap-1.5">
                     <i data-lucide="file-spreadsheet" class="w-4 h-4 text-solanaGreen"></i>
-                    SHADOW PAPER-TRADING EXECUTION LEDGER (<span id="ledger-mode-label">1.0 SOL Instance</span>)
+                    SHADOW PAPER-TRADING EXECUTION LEDGER (<span id="ledger-mode-label">$35 USD Micro-Pilot</span>)
                 </h3>
                 <span class="text-[10px] px-2 py-0.5 rounded bg-solanaGreen/10 text-solanaGreen border border-solanaGreen/20">Verified Net Fills</span>
             </div>
@@ -268,7 +273,7 @@
                     <i data-lucide="line-chart" class="w-4 h-4 text-solanaGreen"></i>
                     WALLET EQUITY CURVE
                 </h3>
-                <span id="chart-initial-label" class="text-[10px] text-emerald-400 font-semibold">1.00 SOL Initial</span>
+                <span id="chart-initial-label" class="text-[10px] text-yellow-400 font-semibold">0.38 SOL Initial ($35)</span>
             </div>
 
             <div class="h-[120px]">
@@ -282,11 +287,11 @@
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-500">Selected Instance:</span>
-                    <span id="card-instance-label" class="text-white font-semibold">1.0 SOL Mode</span>
+                    <span id="card-instance-label" class="text-white font-semibold">$35 USD Micro Mode</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-500">Jito Bundle Tip:</span>
-                    <span class="text-solanaPurple font-semibold">25% Dynamic Margin</span>
+                    <span class="text-gray-500">Spread Floor:</span>
+                    <span class="text-yellow-400 font-semibold">+0.80% (High Conviction)</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-500">Capital Loss Risk:</span>
@@ -296,31 +301,31 @@
         </div>
     </div>
 
-    <!-- SCRIPT: REAL-TIME WEBSOCKET & DUAL INSTANCE RENDERING -->
+    <!-- SCRIPT: REAL-TIME WEBSOCKET & 3 INSTANCE RENDERING -->
     <script>
         lucide.createIcons();
 
-        let liveSolPrice = 85.85;
+        let liveSolPrice = 88.50;
         let dexMatrixMap = new Map();
-        let currentMode = '1sol'; // '1sol' or '10sol'
+        let currentMode = 'micro'; // 'micro', '1sol', or '10sol'
         let fullPayload = null;
 
         const ctx = document.getElementById('equityChart').getContext('2d');
         const equityChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Start'],
+                labels: ['Start (0.38 SOL)'],
                 datasets: [{
                     label: 'Virtual Wallet Balance (SOL)',
-                    data: [1.0],
-                    borderColor: '#14f195',
-                    backgroundColor: 'rgba(20, 241, 149, 0.12)',
+                    data: [0.38],
+                    borderColor: '#fbbf24',
+                    backgroundColor: 'rgba(251, 191, 36, 0.12)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.3,
                     pointRadius: 1.5,
                     pointHoverRadius: 4,
-                    pointBackgroundColor: '#14f195'
+                    pointBackgroundColor: '#fbbf24'
                 }]
             },
             options: {
@@ -359,25 +364,41 @@
 
         function switchInstance(mode) {
             currentMode = mode;
+            const btnM = document.getElementById('tab-micro');
             const btn1 = document.getElementById('tab-1sol');
             const btn10 = document.getElementById('tab-10sol');
 
-            if (mode === '1sol') {
-                btn1.className = 'flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-solanaGreen text-black shadow-lg';
-                btn10.className = 'flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-darkBg border border-darkBorder text-gray-400 hover:text-white';
+            btnM.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-darkBg border border-darkBorder text-gray-400 hover:text-white';
+            btn1.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-darkBg border border-darkBorder text-gray-400 hover:text-white';
+            btn10.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-darkBg border border-darkBorder text-gray-400 hover:text-white';
+
+            if (mode === 'micro') {
+                btnM.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-yellow-400 text-black shadow-lg';
+                document.getElementById('active-instance-label').innerText = '$35 USD Micro-Pilot Mode';
+                document.getElementById('ledger-mode-label').innerText = '$35 USD Micro-Pilot';
+                document.getElementById('chart-initial-label').innerText = '0.38 SOL Initial ($35)';
+                document.getElementById('card-instance-label').innerText = '$35 USD Micro Mode';
+                document.getElementById('stat-trigger-label').innerHTML = 'Spread Floor: <span class="text-yellow-400 font-bold">+0.80% Net</span>';
+                equityChart.data.datasets[0].borderColor = '#fbbf24';
+                equityChart.data.datasets[0].backgroundColor = 'rgba(251, 191, 36, 0.12)';
+            } else if (mode === '1sol') {
+                btn1.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-solanaGreen text-black shadow-lg';
                 document.getElementById('active-instance-label').innerText = '1.0 SOL Runway Mode';
                 document.getElementById('ledger-mode-label').innerText = '1.0 SOL Instance';
-                document.getElementById('chart-initial-label').innerText = '1.00 SOL Initial';
+                document.getElementById('chart-initial-label').innerText = '1.00 SOL Initial ($90)';
                 document.getElementById('card-instance-label').innerText = '1.0 SOL Mode';
                 document.getElementById('stat-trigger-label').innerHTML = 'Max Pos: <span class="text-solanaGreen font-bold">0.12 SOL</span>';
+                equityChart.data.datasets[0].borderColor = '#14f195';
+                equityChart.data.datasets[0].backgroundColor = 'rgba(20, 241, 149, 0.12)';
             } else {
-                btn10.className = 'flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-solanaPurple text-white shadow-lg';
-                btn1.className = 'flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-darkBg border border-darkBorder text-gray-400 hover:text-white';
+                btn10.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-solanaPurple text-white shadow-lg';
                 document.getElementById('active-instance-label').innerText = '10.0 SOL Growth Mode';
                 document.getElementById('ledger-mode-label').innerText = '10.0 SOL Instance';
-                document.getElementById('chart-initial-label').innerText = '10.00 SOL Initial';
+                document.getElementById('chart-initial-label').innerText = '10.00 SOL Initial ($900)';
                 document.getElementById('card-instance-label').innerText = '10.0 SOL Mode';
                 document.getElementById('stat-trigger-label').innerHTML = 'Max Pos: <span class="text-solanaPurple font-bold">0.50 SOL</span>';
+                equityChart.data.datasets[0].borderColor = '#9945ff';
+                equityChart.data.datasets[0].backgroundColor = 'rgba(153, 69, 255, 0.12)';
             }
 
             if (fullPayload) {
@@ -455,11 +476,21 @@
                 document.getElementById('sol-price').innerText = `$${liveSolPrice.toFixed(2)}`;
             }
 
-            const inst = currentMode === '1sol' 
-                ? (payload.instance_1sol || {}) 
-                : (payload.instance_10sol || payload.instance_v2 || {});
+            let inst = {};
+            let defaultInit = 0.38;
 
-            const initBal = inst.initial_balance_sol || (currentMode === '1sol' ? 1.0 : 10.0);
+            if (currentMode === 'micro') {
+                inst = payload.instance_micro || {};
+                defaultInit = 0.38;
+            } else if (currentMode === '1sol') {
+                inst = payload.instance_1sol || {};
+                defaultInit = 1.00;
+            } else {
+                inst = payload.instance_10sol || {};
+                defaultInit = 10.00;
+            }
+
+            const initBal = inst.initial_balance_sol || defaultInit;
             const curBal = inst.virtual_balance_sol !== undefined ? inst.virtual_balance_sol : initBal;
 
             document.getElementById('stat-balance').innerText = Number(curBal).toFixed(4);
@@ -496,7 +527,7 @@
             if (items.length === 0) return;
 
             tbody.innerHTML = items.map(m => {
-                const isProfitable = parseFloat(m.netSpreadPct) >= 0.40;
+                const isProfitable = parseFloat(m.netSpreadPct) >= 0.80;
                 const spreadClass = isProfitable ? 'text-solanaGreen font-black text-sm' : 'text-gray-300 font-mono';
                 const statusBadge = isProfitable
                     ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-solanaGreen/20 text-solanaGreen border border-solanaGreen/40 pulse-live">🎯 ARB SPREAD</span>'

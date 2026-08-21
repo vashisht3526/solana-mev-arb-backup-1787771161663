@@ -21,16 +21,28 @@ async fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let args: Vec<String> = std::env::args().collect();
+    let is_micro = args.iter().any(|arg| arg == "--micro" || arg == "--35usd" || arg == "-m");
     let is_1sol = args.iter().any(|arg| arg == "--1sol" || arg == "-1");
 
-    let (initial_virtual_sol, paper_log_file, max_position_sol, min_net_profit_sol, min_spread_pct, banner_label) = if is_1sol {
+    let (initial_virtual_sol, paper_log_file, max_position_sol, min_net_profit_sol, min_spread_pct, banner_label, engine_tag) = if is_micro {
+        (
+            0.38,
+            "data/paper_trades_micro.ndjson",
+            0.12,
+            0.00050,
+            0.80,
+            "⚡ $35 USD (0.38 SOL) MICRO-PILOT ENGINE (Pos: 0.12 SOL | Spread: +0.80% | High-Conviction)",
+            "MICRO-35USD-ENGINE"
+        )
+    } else if is_1sol {
         (
             1.00,
             "data/paper_trades_1sol.ndjson",
             0.12,
             0.00008,
             0.40,
-            "⚡ 1.0 SOL CONSERVATIVE RUNWAY ENGINE (Max Pos: 0.12 SOL | Reserve: 0.15 SOL)"
+            "⚡ 1.0 SOL CONSERVATIVE RUNWAY ENGINE (Max Pos: 0.12 SOL | Reserve: 0.15 SOL)",
+            "1-SOL-ENGINE"
         )
     } else {
         (
@@ -39,12 +51,13 @@ async fn main() {
             0.50,
             0.00030,
             0.20,
-            "⚡ 10.0 SOL AGGRESSIVE GROWTH ENGINE (Max Pos: 0.50 SOL | Reserve: 1.50 SOL)"
+            "⚡ 10.0 SOL AGGRESSIVE GROWTH ENGINE (Max Pos: 0.50 SOL | Reserve: 1.50 SOL)",
+            "10-SOL-ENGINE"
         )
     };
 
     println!("=======================================================================");
-    println!(" ⚡ SOLANA REAL-TIME STREAMING MEV ENGINE (Dual Instance Architecture) ⚡");
+    println!(" ⚡ SOLANA REAL-TIME STREAMING MEV ENGINE (Multi-Instance System) ⚡");
     println!(" 🏷️ Mode: {}", banner_label);
     println!(" 🤖 Verified by: GLM-5 + Kimi k2.5 + Qwen 3 Coder 480B");
     println!(" 🚀 Mode: Direct Zero-Cost Stream (PumpPortal WS + Active Volatility Auditor)");
@@ -72,6 +85,7 @@ async fn main() {
     let reporter_engine = Arc::clone(&paper_engine);
 
     // Spawn periodic statistics reporter (every 10s)
+    let tag = engine_tag.to_string();
     tokio::spawn(async move {
         loop {
             sleep(Duration::from_secs(10)).await;
@@ -88,7 +102,7 @@ async fn main() {
 
             println!(
                 "📊 [{}] Tokens: {} | Pools: {} | Arbs: {} | Opps: {} | Trades: {} | Wins: {} | Fails: {} | Win Rate: {:.1}% | PnL: {:+.4} SOL | Balance: {:.4} SOL",
-                if is_1sol { "1-SOL-ENGINE" } else { "10-SOL-ENGINE" },
+                tag,
                 tracked,
                 scanned,
                 evaluated,
@@ -103,5 +117,6 @@ async fn main() {
         }
     });
 
+    info!("🚀 Initializing High-Velocity Parallel Scanner...");
     scanner.run().await;
 }
