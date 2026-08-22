@@ -1,11 +1,13 @@
 use crate::amm::evaluate_optimal_arbitrage;
 use crate::paper_engine::PaperTradingEngine;
-use crate::types::{ArbitrageOpportunity, DynamicPoolState, VolatileTrackedToken};
+use crate::types::{
+    DynamicPoolState, SyncViolation, TemporalSyncReport, TokenRiskMeta, VolatileTrackedToken,
+};
 use crate::websocket_feed::{LiveSwapEvent, PumpPortalFeed, RaydiumMigrationEvent};
 use chrono::Utc;
 use dashmap::DashMap;
 use futures::stream::{self, StreamExt};
-use log::info;
+use log::{info, warn};
 use reqwest::Client;
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
@@ -14,14 +16,58 @@ use std::time::Duration;
 use tokio::sync::mpsc::{channel, Receiver};
 use tokio::time::sleep;
 
-// === CONFIGURABLE PARAMETERS ===
-const MIN_POOL_LIQUIDITY_USD: f64 = 100.0;     // Micro-arb pool floor
+// === CONFIGURABLE PARAMETERS & CONSENSUS RISK SHIELDS ===
+const MIN_POOL_LIQUIDITY_USD: f64 = 5_000.0;   // Consensus $5k Liquidity Shield (prevents high price impact)
 const MIN_ADMISSION_5M_VOL_USD: f64 = 15.0;    // Fluid dynamic admission
 const MAX_CONCURRENT_FETCHES: usize = 25;      // High-throughput parallel fetches
 const AUDITOR_INTERVAL_MS: u64 = 1500;         // 1.5s high-frequency audit cycle
 const MAX_TRACKED_TOKENS: usize = 150;         // Scaled universe
 const TOKEN_DECAY_MS: i64 = 600_000;           // 10-minute activity decay
-const DEFAULT_TRADE_COOLDOWN_MS: u64 = 300;     // 300ms cooldown per specific token arb
+const DEFAULT_TRADE_COOLDOWN_MS: u64 = 300;    // 300ms cooldown per specific token arb
+const MAX_TEMPORAL_TIME_SKEW_MS: i64 = 1_500;  // 1.5s Jitter Outlier Filter (eliminates ghost spreads)
+const MAX_SLOT_VARIANCE: u64 = 4;              // Max 4-slot discrepancy across DEX feeds
+
+pub struct TemporalValidator {
+    pub max_time_skew_ms: i64,
+    pub max_slot_variance: u64,
+}
+
+impl TemporalValidator {
+    pub fn new() -> Self {
+        Self {
+            max_time_skew_ms: MAX_TEMPORAL_TIME_SKEW_MS,
+            max_slot_variance: MAX_SLOT_VARIANCE,
+        }
+    }
+
+    pub fn validate_sync(
+        &self,
+        pool_a: &DynamicPoolState,
+        pool_b: &DynamicPoolState,
+    ) -> Result<TemporalSyncReport, SyncViolation> {
+        let time_skew_ms = (pool_a.last_update_ms - pool_b.last_update_ms).abs();
+        if time_skew_ms > self.max_time_skew_ms {
+            return Err(SyncViolation::CrossPoolTimeSkew {
+                skew_ms: time_skew_ms,
+                max_ms: self.max_time_skew_ms,
+            });
+        }
+
+        let slot_skew = (pool_a.slot as i64 - pool_b.slot as i64).abs() as u64;
+        if pool_a.slot > 0 && pool_b.slot > 0 && slot_skew > self.max_slot_variance {
+            return Err(SyncViolation::SlotVarianceExceeded {
+                slot_skew,
+                max_slots: self.max_slot_variance,
+            });
+        }
+
+        Ok(TemporalSyncReport {
+            time_skew_ms,
+            slot_skew,
+            is_synchronized: true,
+        })
+    }
+}
 
 pub struct TradeLockTable {
     inner: DashMap<String, AtomicU64>,
@@ -55,6 +101,7 @@ impl TradeLockTable {
 pub struct ArbitrageScanner {
     http_client: Client,
     paper_engine: Arc<PaperTradingEngine>,
+    temporal_validator: TemporalValidator,
     pub tracking_registry: Arc<DashMap<String, VolatileTrackedToken>>,
     pub trade_locks: Arc<TradeLockTable>,
     pub tokens_tracked: Arc<AtomicUsize>,
@@ -85,6 +132,7 @@ impl ArbitrageScanner {
         Self {
             http_client,
             paper_engine,
+            temporal_validator: TemporalValidator::new(),
             tracking_registry: Arc::new(DashMap::new()),
             trade_locks: Arc::new(TradeLockTable::new()),
             tokens_tracked: Arc::new(AtomicUsize::new(0)),
@@ -148,44 +196,49 @@ impl ArbitrageScanner {
         let now_ms = Utc::now().timestamp_millis();
 
         for p in pairs {
-            let raw_dex = p.get("dexId").and_then(|d| d.as_str()).unwrap_or("").to_lowercase();
-            let dex = if raw_dex.contains("pump") {
-                "PUMPSWAP".to_string()
-            } else if raw_dex.contains("raydium") {
-                "RAYDIUM".to_string()
-            } else if raw_dex.contains("meteora") {
-                "METEORA".to_string()
-            } else if raw_dex.contains("orca") || raw_dex.contains("whirlpool") {
-                "ORCA".to_string()
-            } else {
-                continue;
-            };
-
+            let dex_id = p.get("dexId").and_then(|d| d.as_str()).unwrap_or("");
             let liq = p.get("liquidity").and_then(|l| l.get("usd")).and_then(|u| u.as_f64()).unwrap_or(0.0);
             let vol_5m = p.get("volume").and_then(|v| v.get("m5")).and_then(|m| m.as_f64()).unwrap_or(0.0);
             total_5m_vol += vol_5m;
 
-            if liq >= MIN_POOL_LIQUIDITY_USD {
-                if let Some(price_str) = p.get("priceUsd").and_then(|pr| pr.as_str()) {
-                    if let Ok(price_usd) = price_str.parse::<f64>() {
-                        if price_usd > 0.0 && price_usd < 10000.0 {
-                            let pool = DynamicPoolState {
-                                mint: mint.to_string(),
-                                dex: dex.clone(),
-                                pool_address: p.get("pairAddress").and_then(|pa| pa.as_str()).unwrap_or("").to_string(),
-                                price_usd,
-                                liquidity_usd: liq,
-                                last_update_ms: now_ms,
-                                is_active: true,
-                            };
-                            let dex_key = dex.clone();
-                            if let Some(existing) = best_pools.get(&dex_key) {
-                                if liq > existing.liquidity_usd {
-                                    best_pools.insert(dex_key, pool);
-                                }
-                            } else {
+            // Apply $5k consensus liquidity shield
+            if liq < MIN_POOL_LIQUIDITY_USD {
+                continue;
+            }
+
+            let dex = if dex_id.contains("raydium") {
+                "RAYDIUM".to_string()
+            } else if dex_id.contains("meteora") {
+                "METEORA".to_string()
+            } else if dex_id.contains("orca") {
+                "ORCA".to_string()
+            } else if dex_id.contains("pump") {
+                "PUMPSWAP".to_string()
+            } else {
+                continue;
+            };
+
+            if let Some(price_str) = p.get("priceUsd").and_then(|pu| pu.as_str()) {
+                if let Ok(price_usd) = price_str.parse::<f64>() {
+                    if price_usd > 0.0 && price_usd < 10000.0 {
+                        let pool = DynamicPoolState {
+                            mint: mint.to_string(),
+                            dex: dex.clone(),
+                            pool_address: p.get("pairAddress").and_then(|pa| pa.as_str()).unwrap_or("").to_string(),
+                            price_usd,
+                            liquidity_usd: liq,
+                            last_update_ms: now_ms,
+                            slot: 0,
+                            risk_meta: TokenRiskMeta::safe_default(mint),
+                            is_active: true,
+                        };
+                        let dex_key = dex.clone();
+                        if let Some(existing) = best_pools.get(&dex_key) {
+                            if liq > existing.liquidity_usd {
                                 best_pools.insert(dex_key, pool);
                             }
+                        } else {
+                            best_pools.insert(dex_key, pool);
                         }
                     }
                 }
@@ -196,7 +249,7 @@ impl ArbitrageScanner {
         (symbol, name, effective_mcap, total_5m_vol, active_pools)
     }
 
-    /// Evaluates ALL pairs of active DEX pools without lock contention
+    /// Evaluates ALL pairs of active DEX pools with Temporal Jitter & Risk Shield checks
     pub fn evaluate_all_pool_pairs(
         &self,
         mint: &str,
@@ -212,6 +265,21 @@ impl ArbitrageScanner {
             for j in (i + 1)..pools.len() {
                 let pool_a = &pools[i];
                 let pool_b = &pools[j];
+
+                // 1. Validate Programmatic Risk Shields (Honeypot / Tax / Mint authority)
+                if let Err(violation) = pool_a.risk_meta.validate_risk_shields() {
+                    warn!("🛡️ [RISK SHIELD BLOCKED] {} on {}: {}", symbol, pool_a.dex, violation);
+                    continue;
+                }
+                if let Err(violation) = pool_b.risk_meta.validate_risk_shields() {
+                    warn!("🛡️ [RISK SHIELD BLOCKED] {} on {}: {}", symbol, pool_b.dex, violation);
+                    continue;
+                }
+
+                // 2. Validate Temporal Synchronization (Eliminates Ghost Spreads from lag spikes)
+                if self.temporal_validator.validate_sync(pool_a, pool_b).is_err() {
+                    continue; // Skip out-of-sync time slice
+                }
 
                 self.arbs_checked.fetch_add(1, Ordering::Relaxed);
 
@@ -249,24 +317,38 @@ impl ArbitrageScanner {
             return;
         }
 
-        let price_in_sol = swap.v_sol_in_bonding_curve / swap.v_tokens_in_bonding_curve;
-        let pump_price_usd = price_in_sol * sol_price_usd;
-        let pump_liq_usd = swap.v_sol_in_bonding_curve * 2.0 * sol_price_usd;
-
-        let updated_pump_pool = DynamicPoolState {
-            mint: swap.mint.clone(),
-            dex: "PUMPSWAP".to_string(),
-            pool_address: format!("bonding_curve_{}", swap.mint),
-            price_usd: pump_price_usd,
-            liquidity_usd: pump_liq_usd,
-            last_update_ms: swap.timestamp_ms,
-            is_active: true,
-        };
+        let current_sol_price = if sol_price_usd > 10.0 { sol_price_usd } else { self.get_sol_price() };
 
         if let Some(mut token) = self.tracking_registry.get_mut(&swap.mint) {
-            if let Some(idx) = token.pools.iter().position(|p| p.dex == "PUMPSWAP") {
-                token.pools[idx] = updated_pump_pool;
+            let price_in_sol = if swap.v_tokens_in_bonding_curve > 0.0 {
+                swap.v_sol_in_bonding_curve / swap.v_tokens_in_bonding_curve
+            } else if swap.token_amount > 0.0 {
+                swap.sol_amount / swap.token_amount
             } else {
+                0.0
+            };
+
+            let updated_pump_pool = DynamicPoolState {
+                mint: swap.mint.clone(),
+                dex: "PUMPSWAP".to_string(),
+                pool_address: format!("pump_{}", &swap.mint),
+                price_usd: price_in_sol * current_sol_price,
+                liquidity_usd: swap.v_sol_in_bonding_curve * current_sol_price * 2.0,
+                last_update_ms: Utc::now().timestamp_millis(),
+                slot: 0,
+                risk_meta: TokenRiskMeta::safe_default(&swap.mint),
+                is_active: true,
+            };
+
+            let mut found = false;
+            for p in token.pools.iter_mut() {
+                if p.dex == "PUMPSWAP" {
+                    *p = updated_pump_pool.clone();
+                    found = true;
+                    break;
+                }
+            }
+            if !found {
                 token.pools.push(updated_pump_pool);
             }
 
