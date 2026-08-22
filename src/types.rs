@@ -74,7 +74,7 @@ pub struct TokenRiskMeta {
 }
 
 impl TokenRiskMeta {
-    pub const MAX_ACCEPTABLE_FEE_BPS: u16 = 0;
+    pub const MAX_ACCEPTABLE_FEE_BPS: u16 = 5; // 5 bps tolerance for standard tokens
 
     pub fn safe_default(mint: &str) -> Self {
         Self {
@@ -134,7 +134,7 @@ impl fmt::Display for RiskShieldViolation {
 
 impl std::error::Error for RiskShieldViolation {}
 
-/// Dynamic Compute Budget Configuration (Upgraded to 135k CUs for DLMM bin crossing)
+/// Dynamic Compute Budget Configuration (Upgraded to 180k CUs for Ephemeral ATA + DLMM)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ComputeBudgetConfig {
     pub cu_limit: u32,
@@ -142,15 +142,39 @@ pub struct ComputeBudgetConfig {
 }
 
 impl ComputeBudgetConfig {
-    pub const MEV_STANDARD: Self = Self {
-        cu_limit: 135_000,
+    /// 180,000 CUs for Meteora DLMM / Concentrated AMMs + Ephemeral ATA Create/Close
+    pub const EPHEMERAL_COMPLEX: Self = Self {
+        cu_limit: 180_000,
         cu_price_micro_lamports: 5_000,
     };
 
-    pub const CONSERVATIVE_CPMM: Self = Self {
-        cu_limit: 85_000,
+    /// 125,000 CUs for standard CPMM (Raydium CPMM / PumpSwap) + Ephemeral ATA Create/Close
+    pub const EPHEMERAL_STANDARD: Self = Self {
+        cu_limit: 125_000,
         cu_price_micro_lamports: 5_000,
     };
+}
+
+/// Tracks ephemeral ATA state across in-transaction and background reclamation lifecycle
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EphemeralAtaLifecycle {
+    pub mint: String,
+    pub ata_address: String,
+    pub rent_lamports: u64,
+    pub creation_timestamp_ms: i64,
+    pub is_closed: bool,
+}
+
+impl EphemeralAtaLifecycle {
+    pub fn new(mint: &str, ata_address: &str) -> Self {
+        Self {
+            mint: mint.to_string(),
+            ata_address: ata_address.to_string(),
+            rent_lamports: 2_039_280, // Standard ATA rent exemption
+            creation_timestamp_ms: chrono::Utc::now().timestamp_millis(),
+            is_closed: false,
+        }
+    }
 }
 
 /// Temporal Sync report for validating cross-DEX slot skew
