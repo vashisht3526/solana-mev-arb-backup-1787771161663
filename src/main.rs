@@ -27,8 +27,9 @@ async fn main() {
     let is_micro = args.iter().any(|arg| arg == "--micro" || arg == "--35usd" || arg == "-m");
     let is_1sol = args.iter().any(|arg| arg == "--1sol" || arg == "-1");
 
-    let (initial_virtual_sol, paper_log_file, max_position_sol, min_net_profit_sol, min_spread_pct, banner_label, engine_tag) = if is_live {
+    let (initial_virtual_sol, paper_log_file, max_position_sol, min_net_profit_sol, min_spread_pct, banner_label, engine_tag, live_engine) = if is_live {
         let wallet_pubkey = std::env::var("SOLANA_WALLET_PUBKEY").unwrap_or_else(|_| "LIVE_TRADING_WALLET_ACTIVE".to_string());
+        let live = Arc::new(LiveTradingEngine::new(&wallet_pubkey, 0.38, "data/live_trades.ndjson"));
         (
             0.38,
             "data/live_trades.ndjson",
@@ -36,7 +37,8 @@ async fn main() {
             0.00030,
             0.50,
             "🛡️ LIVE MAINNET TRADING ENGINE (5-Pillar Circuit Breakers | Ephemeral ATAs | Zero Risk Leakage)",
-            "LIVE-MAINNET-ENGINE"
+            "LIVE-MAINNET-ENGINE",
+            Some(live)
         )
     } else if is_micro {
         (
@@ -46,7 +48,8 @@ async fn main() {
             0.00050,
             0.80,
             "⚡ $35 USD (0.38 SOL) MICRO-PILOT SHADOW ENGINE (Pos: 0.12 SOL | Spread: +0.80%)",
-            "MICRO-35USD-ENGINE"
+            "MICRO-35USD-ENGINE",
+            None
         )
     } else if is_1sol {
         (
@@ -56,7 +59,8 @@ async fn main() {
             0.00008,
             0.40,
             "⚡ 1.0 SOL CONSERVATIVE RUNWAY SHADOW ENGINE (Max Pos: 0.12 SOL | Reserve: 0.15 SOL)",
-            "1-SOL-ENGINE"
+            "1-SOL-ENGINE",
+            None
         )
     } else {
         (
@@ -66,7 +70,8 @@ async fn main() {
             0.00030,
             0.20,
             "⚡ 10.0 SOL AGGRESSIVE GROWTH SHADOW ENGINE (Max Pos: 0.50 SOL | Reserve: 1.50 SOL)",
-            "10-SOL-ENGINE"
+            "10-SOL-ENGINE",
+            None
         )
     };
 
@@ -87,6 +92,7 @@ async fn main() {
     let paper_engine = Arc::new(PaperTradingEngine::new(initial_virtual_sol, paper_log_file));
     let scanner = Arc::new(ArbitrageScanner::new(
         Arc::clone(&paper_engine),
+        live_engine,
         max_position_sol,
         min_net_profit_sol,
         min_spread_pct,

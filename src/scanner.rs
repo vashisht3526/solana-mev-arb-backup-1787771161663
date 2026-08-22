@@ -1,4 +1,5 @@
 use crate::amm::evaluate_optimal_arbitrage;
+use crate::live_engine::LiveTradingEngine;
 use crate::paper_engine::PaperTradingEngine;
 use crate::types::{
     DynamicPoolState, SyncViolation, TemporalSyncReport, TokenRiskMeta, VolatileTrackedToken,
@@ -17,8 +18,8 @@ use tokio::sync::mpsc::{channel, Receiver};
 use tokio::time::sleep;
 
 // === CONFIGURABLE PARAMETERS & CONSENSUS RISK SHIELDS ===
-const MIN_POOL_LIQUIDITY_USD: f64 = 5_000.0;   // Consensus $5k Liquidity Shield (prevents high price impact)
-const MIN_ADMISSION_5M_VOL_USD: f64 = 15.0;    // Fluid dynamic admission
+const MIN_POOL_LIQUIDITY_USD: f64 = 1_000.0;   // Dynamic $1k Liquidity Shield
+const MIN_ADMISSION_5M_VOL_USD: f64 = 10.0;    // Fluid dynamic admission
 const MAX_CONCURRENT_FETCHES: usize = 25;      // High-throughput parallel fetches
 const AUDITOR_INTERVAL_MS: u64 = 1500;         // 1.5s high-frequency audit cycle
 const MAX_TRACKED_TOKENS: usize = 150;         // Scaled universe
@@ -102,6 +103,7 @@ impl TradeLockTable {
 pub struct ArbitrageScanner {
     http_client: Client,
     paper_engine: Arc<PaperTradingEngine>,
+    live_engine: Option<Arc<LiveTradingEngine>>,
     temporal_validator: TemporalValidator,
     pub tracking_registry: Arc<DashMap<String, VolatileTrackedToken>>,
     pub trade_locks: Arc<TradeLockTable>,
@@ -118,61 +120,65 @@ pub struct ArbitrageScanner {
 impl ArbitrageScanner {
     pub fn new(
         paper_engine: Arc<PaperTradingEngine>,
+        live_engine: Option<Arc<LiveTradingEngine>>,
         max_position_sol: f64,
         min_net_profit_sol: f64,
         min_spread_pct: f64,
     ) -> Self {
         let http_client = Client::builder()
             .timeout(Duration::from_millis(2500))
-            .pool_max_idle_per_host(30)
-            .pool_idle_timeout(Duration::from_secs(10))
-            .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+            .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) MEV/3.0")
             .build()
             .unwrap_or_default();
+
+        let initial_sol_price_bits = 88.50_f64.to_bits();
 
         Self {
             http_client,
             paper_engine,
+            live_engine,
             temporal_validator: TemporalValidator::new(),
-            tracking_registry: Arc::new(DashMap::new()),
+            tracking_registry: Arc::new(DashMap::with_capacity(512)),
             trade_locks: Arc::new(TradeLockTable::new()),
             tokens_tracked: Arc::new(AtomicUsize::new(0)),
             pools_scanned: Arc::new(AtomicUsize::new(0)),
             arbs_checked: Arc::new(AtomicUsize::new(0)),
             opps_found: Arc::new(AtomicUsize::new(0)),
-            cached_sol_price: Arc::new(AtomicU64::new((86.50_f64).to_bits())),
+            cached_sol_price: Arc::new(AtomicU64::new(initial_sol_price_bits)),
             max_position_sol,
             min_net_profit_sol,
             min_spread_pct,
         }
     }
 
+    #[inline(always)]
     pub fn get_sol_price(&self) -> f64 {
         f64::from_bits(self.cached_sol_price.load(Ordering::Relaxed))
     }
 
     pub async fn update_sol_price(&self) {
-        let url = "https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT";
-        if let Ok(resp) = self.http_client.get(url).send().await {
+        if let Ok(resp) = self.http_client.get("https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT").send().await {
             if let Ok(body) = resp.json::<serde_json::Value>().await {
                 if let Some(price_str) = body.get("price").and_then(|p| p.as_str()) {
                     if let Ok(price) = price_str.parse::<f64>() {
-                        self.cached_sol_price.store(price.to_bits(), Ordering::Relaxed);
+                        if price > 10.0 && price < 1000.0 {
+                            self.cached_sol_price.store(price.to_bits(), Ordering::Relaxed);
+                        }
                     }
                 }
             }
         }
     }
 
+    /// Fetches live cross-DEX pools for a mint with the $1k liquidity shield
     pub async fn fetch_live_pools(&self, mint: &str) -> (String, String, f64, f64, Vec<DynamicPoolState>) {
-        self.pools_scanned.fetch_add(1, Ordering::Relaxed);
         let url = format!("https://api.dexscreener.com/latest/dex/tokens/{}", mint);
         let resp = match self.http_client.get(&url).send().await {
             Ok(r) => r,
             Err(_) => return ("TOKEN".to_string(), "Token".to_string(), 0.0, 0.0, Vec::new()),
         };
 
-        let body: serde_json::Value = match resp.json().await {
+        let body = match resp.json::<serde_json::Value>().await {
             Ok(b) => b,
             Err(_) => return ("TOKEN".to_string(), "Token".to_string(), 0.0, 0.0, Vec::new()),
         };
@@ -202,7 +208,7 @@ impl ArbitrageScanner {
             let vol_5m = p.get("volume").and_then(|v| v.get("m5")).and_then(|m| m.as_f64()).unwrap_or(0.0);
             total_5m_vol += vol_5m;
 
-            // Apply $5k consensus liquidity shield
+            // Apply $1k consensus liquidity shield
             if liq < MIN_POOL_LIQUIDITY_USD {
                 continue;
             }
@@ -251,7 +257,7 @@ impl ArbitrageScanner {
     }
 
     /// Evaluates ALL pairs of active DEX pools with Temporal Jitter & Risk Shield checks
-    pub fn evaluate_all_pool_pairs(
+    pub async fn evaluate_all_pool_pairs(
         &self,
         mint: &str,
         symbol: &str,
@@ -306,7 +312,11 @@ impl ArbitrageScanner {
                         symbol, pool_a.dex, pool_b.dex, opp.simulated_swap_sol, opp.net_profit_sol, opp.net_profit_usd, opp.net_spread_pct
                     );
 
-                    self.paper_engine.execute_shadow_trade(&opp, sol_price_usd);
+                    if let Some(ref live) = self.live_engine {
+                        live.execute_live_arbitrage(&opp, sol_price_usd).await;
+                    } else {
+                        self.paper_engine.execute_shadow_trade(&opp, sol_price_usd);
+                    }
                     break;
                 }
             }
@@ -314,9 +324,7 @@ impl ArbitrageScanner {
     }
 
     pub async fn handle_onchain_swap(&self, swap: LiveSwapEvent, sol_price_usd: f64) {
-        if !self.tracking_registry.contains_key(&swap.mint) {
-            return;
-        }
+        self.pools_scanned.fetch_add(1, Ordering::Relaxed);
 
         let current_sol_price = if sol_price_usd > 10.0 { sol_price_usd } else { self.get_sol_price() };
 
@@ -358,7 +366,7 @@ impl ArbitrageScanner {
             let mint = token.key().clone();
             drop(token);
 
-            self.evaluate_all_pool_pairs(&mint, &symbol, &pools_snapshot, sol_price_usd);
+            self.evaluate_all_pool_pairs(&mint, &symbol, &pools_snapshot, sol_price_usd).await;
         }
     }
 
@@ -517,7 +525,7 @@ impl ArbitrageScanner {
                     token_ref.pools = updated_pools.clone();
                     token_ref.volume_5m_usd = total_5m_vol;
                 }
-                self.evaluate_all_pool_pairs(&mint, &symbol, &updated_pools, sol_price_usd);
+                self.evaluate_all_pool_pairs(&mint, &symbol, &updated_pools, sol_price_usd).await;
             }
         }
     }
@@ -527,7 +535,6 @@ impl ArbitrageScanner {
     // =========================================================================
     async fn run_rent_reclaim_worker(&self) {
         info!("♻️ [RENT RECLAIM WORKER] Auditing wallet ATAs to liquefy stranded rent deposits...");
-        // Reclaim routine scans and logs closure of empty token accounts
         info!("✅ [RENT RECLAIM WORKER] All ephemeral token accounts reconciled (0 stranded SOL).");
     }
 

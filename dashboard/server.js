@@ -17,13 +17,14 @@ const PAPER_TRADES_MICRO_PATH = path.join(DATA_DIR, 'paper_trades_micro.ndjson')
 const PAPER_TRADES_1SOL_PATH = path.join(DATA_DIR, 'paper_trades_1sol.ndjson');
 const PAPER_TRADES_10SOL_PATH = path.join(DATA_DIR, 'paper_trades_10sol.ndjson');
 const LIVE_TRADES_PATH = path.join(DATA_DIR, 'live_trades.ndjson');
+const LIVE_CONFIG_PATH = path.join(DATA_DIR, 'live_trading_config.json');
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 let liveSolPrice = 88.50;
 
-// Dynamic Live Configuration
+// Persistent Live Configuration
 let liveTradingConfig = {
     wallet_pubkey: process.env.SOLANA_WALLET_PUBKEY || '',
     wallet_balance_sol: 0.38,
@@ -36,6 +37,47 @@ let liveTradingConfig = {
     max_drawdown_sol: 0.05,
     status_label: 'IDLE / READY TO TRADE'
 };
+
+// Load saved config from disk on startup
+if (fs.existsSync(LIVE_CONFIG_PATH)) {
+    try {
+        const saved = JSON.parse(fs.readFileSync(LIVE_CONFIG_PATH, 'utf-8'));
+        liveTradingConfig = { ...liveTradingConfig, ...saved };
+        console.log(`📁 Loaded persistent live config for wallet: ${liveTradingConfig.wallet_pubkey || 'None'}`);
+    } catch (e) {
+        console.warn('⚠️ Could not parse live config file');
+    }
+}
+
+function saveLiveConfigToDisk() {
+    try {
+        if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+        fs.writeFileSync(LIVE_CONFIG_PATH, JSON.stringify(liveTradingConfig, null, 2));
+    } catch (e) {
+        console.error('⚠️ Failed to save live config to disk:', e.message);
+    }
+}
+
+// Periodically check PM2 status of rust-mev-arb-live
+function checkPm2EngineState() {
+    exec('pm2 jlist', (err, stdout) => {
+        if (!err && stdout) {
+            try {
+                const list = JSON.parse(stdout);
+                const liveProc = list.find(p => p.name === 'rust-mev-arb-live');
+                if (liveProc && liveProc.pm2_env && liveProc.pm2_env.status === 'online') {
+                    liveTradingConfig.is_engine_running = true;
+                    liveTradingConfig.status_label = 'LIVE ACTIVE (Trading Real SOL)';
+                } else {
+                    liveTradingConfig.is_engine_running = false;
+                    liveTradingConfig.status_label = 'PAUSED / STANDBY';
+                }
+            } catch (e) {}
+        }
+    });
+}
+setInterval(checkPm2EngineState, 4000);
+checkPm2EngineState();
 
 function fetchLiveSolPrice() {
     https.get('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT', { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
@@ -211,7 +253,7 @@ function runDiscoveryScout() {
                                         totalLiq += liq;
                                         const price = parseFloat(p.priceUsd);
 
-                                        if (liq >= 5000 && !isNaN(price) && price > 0 && price < 10000) {
+                                        if (liq >= 1000 && !isNaN(price) && price > 0 && price < 10000) {
                                             if (dex === 'raydium' && (!pools.raydium || liq > pools.raydium.liq)) {
                                                 pools.raydium = { price, liq };
                                             } else if (dex === 'meteora' && (!pools.meteora || liq > pools.meteora.liq)) {
@@ -231,7 +273,7 @@ function runDiscoveryScout() {
                                         { dex: 'Orca', data: pools.orca }
                                     ].filter(p => p.data !== null);
 
-                                    if (activePools.length >= 2 && total5mVol >= 20) {
+                                    if (activePools.length >= 2 && total5mVol >= 10) {
                                         activePools.sort((a, b) => a.data.price - b.data.price);
                                         const low = activePools[0];
                                         const high = activePools[activePools.length - 1];
@@ -329,6 +371,8 @@ app.post('/api/live/wallet', (req, res) => {
     const { publicKey } = req.body;
     if (publicKey && publicKey.length >= 32) {
         liveTradingConfig.wallet_pubkey = publicKey;
+        saveLiveConfigToDisk();
+
         // Verify balance from public RPC
         const postData = JSON.stringify({
             jsonrpc: '2.0',
@@ -355,6 +399,7 @@ app.post('/api/live/wallet', (req, res) => {
                     if (rpcJson.result && rpcJson.result.value !== undefined) {
                         const balSol = rpcJson.result.value / 1_000_000_000.0;
                         liveTradingConfig.wallet_balance_sol = Number(balSol.toFixed(4));
+                        saveLiveConfigToDisk();
                     }
                 } catch (e) {}
                 broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
@@ -378,6 +423,7 @@ app.post('/api/live/config', (req, res) => {
     if (min_net_profit_sol !== undefined) liveTradingConfig.min_net_profit_sol = parseFloat(min_net_profit_sol);
     if (jito_tip_pct !== undefined) liveTradingConfig.jito_tip_pct = parseInt(jito_tip_pct);
 
+    saveLiveConfigToDisk();
     broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
     res.json({ success: true, config: liveTradingConfig });
 });
@@ -387,14 +433,16 @@ app.post('/api/live/control', (req, res) => {
     if (action === 'start') {
         liveTradingConfig.is_engine_running = true;
         liveTradingConfig.status_label = 'LIVE ACTIVE (Trading Real SOL)';
-        exec('pm2 restart rust-mev-arb-live || pm2 start ./target/release/solana-mev-arb --name rust-mev-arb-live -- --live', (err) => {
+        saveLiveConfigToDisk();
+        exec('cd /home/ubuntu/solana-mev-arb && (pm2 restart rust-mev-arb-live || pm2 start ./target/release/solana-mev-arb --name rust-mev-arb-live -- --live)', (err) => {
             broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
             res.json({ success: true, status: liveTradingConfig.status_label });
         });
     } else if (action === 'stop' || action === 'kill') {
         liveTradingConfig.is_engine_running = false;
         liveTradingConfig.status_label = action === 'kill' ? 'EMERGENCY SHUTDOWN TRIGGERED' : 'PAUSED / STANDBY';
-        exec('pm2 stop rust-mev-arb-live', (err) => {
+        saveLiveConfigToDisk();
+        exec('cd /home/ubuntu/solana-mev-arb && pm2 stop rust-mev-arb-live', (err) => {
             broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
             res.json({ success: true, status: liveTradingConfig.status_label });
         });
