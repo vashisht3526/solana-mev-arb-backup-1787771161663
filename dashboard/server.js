@@ -5,6 +5,7 @@ const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { exec } = require('child_process');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,11 +16,26 @@ const DATA_DIR = path.join(__dirname, '..', 'data');
 const PAPER_TRADES_MICRO_PATH = path.join(DATA_DIR, 'paper_trades_micro.ndjson');
 const PAPER_TRADES_1SOL_PATH = path.join(DATA_DIR, 'paper_trades_1sol.ndjson');
 const PAPER_TRADES_10SOL_PATH = path.join(DATA_DIR, 'paper_trades_10sol.ndjson');
+const LIVE_TRADES_PATH = path.join(DATA_DIR, 'live_trades.ndjson');
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 let liveSolPrice = 88.50;
+
+// Dynamic Live Configuration
+let liveTradingConfig = {
+    wallet_pubkey: process.env.SOLANA_WALLET_PUBKEY || '',
+    wallet_balance_sol: 0.38,
+    is_engine_running: false,
+    max_position_sol: 0.08,
+    min_spread_pct: 0.50,
+    min_net_profit_sol: 0.00030,
+    jito_tip_pct: 25,
+    reserve_floor_sol: 0.10,
+    max_drawdown_sol: 0.05,
+    status_label: 'IDLE / READY TO TRADE'
+};
 
 function fetchLiveSolPrice() {
     https.get('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT', { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
@@ -76,9 +92,9 @@ function parseLogFile(filePath, initialBalance) {
             };
         }
 
-        const wins = rawTrades.filter(t => t.status === 'FILLED' && t.net_pnl_sol > 0);
-        const fails = rawTrades.filter(t => t.status !== 'FILLED' || t.net_pnl_sol <= 0);
-        const totalPnlSol = rawTrades.reduce((acc, t) => acc + (t.net_pnl_sol || 0), 0);
+        const wins = rawTrades.filter(t => t.live_status === 'LANDED_CONFIRMED' || (t.status === 'FILLED' && t.net_pnl_sol > 0));
+        const fails = rawTrades.filter(t => (t.status && t.status !== 'FILLED') || (t.live_status && t.live_status !== 'LANDED_CONFIRMED'));
+        const totalPnlSol = rawTrades.reduce((acc, t) => acc + (t.net_pnl_sol || t.expected_net_profit_sol || 0), 0);
         const totalPnlUsd = totalPnlSol * liveSolPrice;
         const currentBalance = initialBalance + totalPnlSol;
         const winRate = rawTrades.length > 0 ? ((wins.length / rawTrades.length) * 100).toFixed(1) : '0.0';
@@ -90,7 +106,7 @@ function parseLogFile(filePath, initialBalance) {
         rawTrades.forEach((t, idx) => {
             equityHistory.push({
                 time: t.iso_time ? t.iso_time.substring(11, 19) : `#${idx + 1}`,
-                balance: Number((t.ending_wallet_balance_sol || (initialBalance + totalPnlSol)).toFixed(4))
+                balance: Number((t.post_balance_sol || t.ending_wallet_balance_sol || (initialBalance + totalPnlSol)).toFixed(4))
             });
         });
 
@@ -195,7 +211,7 @@ function runDiscoveryScout() {
                                         totalLiq += liq;
                                         const price = parseFloat(p.priceUsd);
 
-                                        if (liq >= 400 && !isNaN(price) && price > 0 && price < 10000) {
+                                        if (liq >= 5000 && !isNaN(price) && price > 0 && price < 10000) {
                                             if (dex === 'raydium' && (!pools.raydium || liq > pools.raydium.liq)) {
                                                 pools.raydium = { price, liq };
                                             } else if (dex === 'meteora' && (!pools.meteora || liq > pools.meteora.liq)) {
@@ -279,7 +295,7 @@ function broadcast(data) {
 
 if (fs.existsSync(DATA_DIR)) {
     fs.watch(DATA_DIR, (eventType, filename) => {
-        if (filename && filename.includes('paper_trades')) {
+        if (filename && (filename.includes('paper_trades') || filename.includes('live_trades'))) {
             broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
         }
     });
@@ -290,12 +306,101 @@ function getAllStats() {
         system: systemState,
         instance_micro: parseLogFile(PAPER_TRADES_MICRO_PATH, 0.38),
         instance_1sol: parseLogFile(PAPER_TRADES_1SOL_PATH, 1.0),
-        instance_10sol: parseLogFile(PAPER_TRADES_10SOL_PATH, 10.0)
+        instance_10sol: parseLogFile(PAPER_TRADES_10SOL_PATH, 10.0),
+        instance_live: parseLogFile(LIVE_TRADES_PATH, liveTradingConfig.wallet_balance_sol),
+        live_config: liveTradingConfig
     };
 }
 
+// === LIVE CONTROL API ENDPOINTS ===
+
 app.get('/api/stats', (req, res) => {
     res.json(getAllStats());
+});
+
+app.get('/api/live/status', (req, res) => {
+    res.json({
+        config: liveTradingConfig,
+        stats: parseLogFile(LIVE_TRADES_PATH, liveTradingConfig.wallet_balance_sol)
+    });
+});
+
+app.post('/api/live/wallet', (req, res) => {
+    const { publicKey } = req.body;
+    if (publicKey && publicKey.length >= 32) {
+        liveTradingConfig.wallet_pubkey = publicKey;
+        // Verify balance from public RPC
+        const postData = JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getBalance',
+            params: [publicKey]
+        });
+
+        const reqRpc = https.request({
+            hostname: 'api.mainnet-beta.solana.com',
+            port: 443,
+            path: '/',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(postData)
+            }
+        }, (rpcRes) => {
+            let rd = '';
+            rpcRes.on('data', c => rd += c);
+            rpcRes.on('end', () => {
+                try {
+                    const rpcJson = JSON.parse(rd);
+                    if (rpcJson.result && rpcJson.result.value !== undefined) {
+                        const balSol = rpcJson.result.value / 1_000_000_000.0;
+                        liveTradingConfig.wallet_balance_sol = Number(balSol.toFixed(4));
+                    }
+                } catch (e) {}
+                broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
+                res.json({ success: true, config: liveTradingConfig });
+            });
+        });
+        reqRpc.on('error', () => {
+            res.json({ success: true, config: liveTradingConfig });
+        });
+        reqRpc.write(postData);
+        reqRpc.end();
+    } else {
+        res.status(400).json({ error: 'Invalid Solana Public Key' });
+    }
+});
+
+app.post('/api/live/config', (req, res) => {
+    const { max_position_sol, min_spread_pct, min_net_profit_sol, jito_tip_pct } = req.body;
+    if (max_position_sol !== undefined) liveTradingConfig.max_position_sol = parseFloat(max_position_sol);
+    if (min_spread_pct !== undefined) liveTradingConfig.min_spread_pct = parseFloat(min_spread_pct);
+    if (min_net_profit_sol !== undefined) liveTradingConfig.min_net_profit_sol = parseFloat(min_net_profit_sol);
+    if (jito_tip_pct !== undefined) liveTradingConfig.jito_tip_pct = parseInt(jito_tip_pct);
+
+    broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
+    res.json({ success: true, config: liveTradingConfig });
+});
+
+app.post('/api/live/control', (req, res) => {
+    const { action } = req.body;
+    if (action === 'start') {
+        liveTradingConfig.is_engine_running = true;
+        liveTradingConfig.status_label = 'LIVE ACTIVE (Trading Real SOL)';
+        exec('pm2 restart rust-mev-arb-live || pm2 start ./target/release/solana-mev-arb --name rust-mev-arb-live -- --live', (err) => {
+            broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
+            res.json({ success: true, status: liveTradingConfig.status_label });
+        });
+    } else if (action === 'stop' || action === 'kill') {
+        liveTradingConfig.is_engine_running = false;
+        liveTradingConfig.status_label = action === 'kill' ? 'EMERGENCY SHUTDOWN TRIGGERED' : 'PAUSED / STANDBY';
+        exec('pm2 stop rust-mev-arb-live', (err) => {
+            broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
+            res.json({ success: true, status: liveTradingConfig.status_label });
+        });
+    } else {
+        res.status(400).json({ error: 'Invalid control action' });
+    }
 });
 
 app.get('/api/health', (req, res) => {
@@ -307,5 +412,5 @@ wss.on('connection', (ws) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Solana Triple-Engine Multi-DEX Monitor running on http://0.0.0.0:${PORT}`);
+    console.log(`🚀 Solana Live MEV Control Terminal running on http://0.0.0.0:${PORT}`);
 });

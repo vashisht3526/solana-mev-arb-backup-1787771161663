@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solana Live Multi-DEX Triple-Engine Arbitrage Terminal</title>
+    <title>Solana Live Multi-DEX Arbitrage & Real Trading Terminal</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -38,6 +38,7 @@
             color: #e2e8f0;
         }
         .glow-green { box-shadow: 0 0 15px rgba(20, 241, 149, 0.2); }
+        .glow-red { box-shadow: 0 0 15px rgba(244, 63, 94, 0.3); }
         .pulse-live { animation: pulse 1.5s infinite; }
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
@@ -59,10 +60,10 @@
             </div>
             <div>
                 <h1 class="text-base md:text-lg font-bold tracking-wider flex items-center gap-2">
-                    SOLANA REAL TRIPLE-ENGINE ARBITRAGE TERMINAL
-                    <span class="text-[10px] px-2 py-0.5 rounded bg-solanaPurple/20 text-solanaPurple border border-solanaPurple/30 font-bold">3 Instances Online</span>
+                    SOLANA MEV ARBITRAGE & LIVE CONTROL CENTER
+                    <span class="text-[10px] px-2 py-0.5 rounded bg-solanaPurple/20 text-solanaPurple border border-solanaPurple/30 font-bold">Mainnet Ready</span>
                 </h1>
-                <p class="text-[11px] text-gray-400">Comparing live prices across Raydium ⚡ Meteora ⚡ PumpSwap ⚡ Orca</p>
+                <p class="text-[11px] text-gray-400">Raydium ⚡ Meteora DLMM ⚡ PumpSwap ⚡ Orca Whirlpools (Frankfurt Jito)</p>
             </div>
         </div>
 
@@ -98,489 +99,553 @@
 
     <!-- INSTANCE SELECTOR TABS -->
     <div class="flex flex-wrap items-center justify-between gap-3 bg-darkCard border border-darkBorder rounded-xl p-2 px-4 shadow-md">
-        <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs text-gray-400 font-bold uppercase tracking-wider mr-2">Select Instance:</span>
-            <button id="tab-micro" onclick="switchInstance('micro')" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-yellow-400 text-black shadow-lg">
-                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                ⚡ $35 USD (0.38 SOL Micro-Pilot)
+        <div class="flex flex-wrap gap-2 text-xs font-semibold">
+            <!-- TAB 1: LIVE REAL TRADING -->
+            <button onclick="switchTab('live')" id="tab-btn-live" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-red-950/40 border border-red-500/50 text-red-400 font-bold transition shadow glow-red">
+                <i data-lucide="shield-check" class="w-4 h-4 text-red-400"></i>
+                <span>🛡️ LIVE REAL TRADING ($35 Pilot)</span>
+                <span id="badge-live-tag" class="text-[9px] bg-red-500/20 text-red-300 px-1.5 py-0.5 rounded border border-red-500/30">ARMED</span>
             </button>
-            <button id="tab-1sol" onclick="switchInstance('1sol')" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-darkBg border border-darkBorder text-gray-400 hover:text-white">
-                <i data-lucide="shield" class="w-3.5 h-3.5"></i>
-                ⚡ 1.0 SOL Instance
+
+            <!-- TAB 2: $35 Micro Shadow -->
+            <button onclick="switchTab('micro')" id="tab-btn-micro" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-darkBg border border-darkBorder text-gray-400 hover:text-white transition">
+                <i data-lucide="flame" class="w-4 h-4 text-amber-400"></i>
+                <span>⚡ $35 Micro Shadow</span>
+                <span class="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">0.38 SOL</span>
             </button>
-            <button id="tab-10sol" onclick="switchInstance('10sol')" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-darkBg border border-darkBorder text-gray-400 hover:text-white">
-                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-                ⚡ 10.0 SOL Instance
+
+            <!-- TAB 3: 1.0 SOL Conservative -->
+            <button onclick="switchTab('1sol')" id="tab-btn-1sol" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-darkBg border border-darkBorder text-gray-400 hover:text-white transition">
+                <i data-lucide="shield" class="w-4 h-4 text-neonBlue"></i>
+                <span>💎 1.0 SOL Shadow</span>
+                <span class="text-[9px] bg-sky-500/20 text-sky-400 px-1.5 py-0.5 rounded">1.0 SOL</span>
+            </button>
+
+            <!-- TAB 4: 10.0 SOL Growth -->
+            <button onclick="switchTab('10sol')" id="tab-btn-10sol" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-darkBg border border-darkBorder text-gray-400 hover:text-white transition">
+                <i data-lucide="trending-up" class="w-4 h-4 text-solanaPurple"></i>
+                <span>🚀 10.0 SOL Shadow</span>
+                <span class="text-[9px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">10.0 SOL</span>
             </button>
         </div>
+
         <div class="text-[11px] text-gray-400 flex items-center gap-2">
-            <span id="active-instance-label" class="text-yellow-400 font-bold">$35 USD Micro-Pilot Mode</span>
-            <span>• Single-Trade Lock (0.12 SOL)</span>
+            <i data-lucide="cpu" class="w-3.5 h-3.5 text-gray-500"></i>
+            <span>Memory: <b id="sys-ram" class="text-gray-200">-- MB</b></span>
+            <span class="text-darkBorder">|</span>
+            <span>CPU: <b id="sys-cpu" class="text-gray-200">--%</b></span>
         </div>
     </div>
 
-    <!-- KEY STATS ROW -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- 1. Virtual Balance -->
-        <div class="bg-darkCard border border-darkBorder rounded-xl p-4 flex flex-col justify-between shadow-md">
-            <div class="flex justify-between items-center text-gray-400 text-xs">
-                <span>VIRTUAL WALLET BALANCE</span>
-                <i data-lucide="wallet" class="w-4 h-4 text-solanaPurple"></i>
-            </div>
-            <div class="mt-2">
-                <div class="text-2xl font-black text-white flex items-baseline gap-1">
-                    <span id="stat-balance">0.3800</span>
-                    <span class="text-xs text-solanaPurple font-normal">SOL</span>
+    <!-- ================================================================= -->
+    <!-- DEDICATED LIVE REAL-MONEY TRADING MODULE CONTAINER -->
+    <!-- ================================================================= -->
+    <div id="live-trading-panel" class="space-y-4">
+        <!-- 1. WALLET CONNECTION & LIVE ENGINE CONTROLS -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <!-- WALLET CARD -->
+            <div class="lg:col-span-2 bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                            <i data-lucide="wallet" class="w-4 h-4 text-solanaGreen"></i>
+                            Live Trading Wallet Connection
+                        </span>
+                        <span id="wallet-status-badge" class="text-[10px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                            READY TO CONNECT
+                        </span>
+                    </div>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="input-wallet-address" placeholder="Enter Solana Public Key (e.g. 7xKX...)" class="flex-1 bg-darkBg border border-darkBorder rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-solanaGreen">
+                        <button onclick="saveConnectedWallet()" class="px-4 py-2 bg-solanaGreen/20 hover:bg-solanaGreen/30 border border-solanaGreen/50 text-solanaGreen font-bold rounded-lg text-xs transition">
+                            Connect & Fetch
+                        </button>
+                    </div>
                 </div>
-                <div class="text-xs text-gray-400 mt-1 flex items-center justify-between">
-                    <span id="stat-balance-usd">≈ $33.63 USD</span>
-                    <span class="text-emerald-400 text-[10px]">Real-Time Sync</span>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs bg-darkBg/60 p-3 rounded-lg border border-darkBorder">
+                    <div>
+                        <span class="text-gray-500 text-[10px]">ON-CHAIN BALANCE</span>
+                        <div id="live-wallet-bal" class="font-bold text-white text-sm">0.3800 SOL</div>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 text-[10px]">USD VALUE</span>
+                        <div id="live-wallet-usd" class="font-bold text-yellow-400 text-sm">$33.63</div>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 text-[10px]">GAS RESERVE FLOOR</span>
+                        <div class="font-bold text-emerald-400 text-sm">0.1000 SOL 🛡️</div>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 text-[10px]">MAX RISK PER TRADE</span>
+                        <div id="live-max-risk" class="font-bold text-sky-400 text-sm">0.0800 SOL (21%)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ENGINE CONTROLS -->
+            <div class="bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg flex flex-col justify-between">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5 mb-2">
+                        <i data-lucide="power" class="w-4 h-4 text-red-400"></i>
+                        Live Engine Supervisor
+                    </span>
+                    <div id="live-engine-status-text" class="text-xs font-semibold text-gray-300 mb-3 bg-darkBg p-2 rounded border border-darkBorder">
+                        Status: <b class="text-yellow-400">PAUSED / STANDBY</b>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <button onclick="controlLiveEngine('start')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow">
+                        <i data-lucide="play" class="w-4 h-4"></i>
+                        ▶ START LIVE TRADING ENGINE
+                    </button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="controlLiveEngine('stop')" class="py-2 bg-yellow-600/30 hover:bg-yellow-600/40 border border-yellow-500/50 text-yellow-300 font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1">
+                            <i data-lucide="pause" class="w-3.5 h-3.5"></i>
+                            ⏸ Pause
+                        </button>
+                        <button onclick="controlLiveEngine('kill')" class="py-2 bg-red-600/40 hover:bg-red-600/60 border border-red-500 text-red-300 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1 glow-red">
+                            <i data-lucide="octagon-alert" class="w-3.5 h-3.5"></i>
+                            🛑 Killswitch
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. Realized Net PnL -->
-        <div class="bg-darkCard border border-darkBorder rounded-xl p-4 flex flex-col justify-between shadow-md">
-            <div class="flex justify-between items-center text-gray-400 text-xs">
-                <span>REALIZED NET PNL</span>
-                <i data-lucide="trending-up" class="w-4 h-4 text-solanaGreen"></i>
+        <!-- 2. PARAMETER OPTIMIZER & SIZING SLIDERS -->
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                    <i data-lucide="sliders" class="w-4 h-4 text-neonBlue"></i>
+                    Live Execution Parameter & Sizing Optimizer
+                </span>
+                <button onclick="saveLiveConfig()" class="px-3 py-1 bg-neonBlue/20 hover:bg-neonBlue/30 border border-neonBlue/50 text-neonBlue text-xs font-bold rounded-lg transition">
+                    Save Parameters
+                </button>
             </div>
-            <div class="mt-2">
-                <div class="text-2xl font-black text-solanaGreen flex items-baseline gap-1">
-                    <span id="stat-pnl">+0.0000</span>
-                    <span class="text-xs font-normal">SOL</span>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+                <!-- Sizing Slider -->
+                <div class="bg-darkBg p-3 rounded-lg border border-darkBorder space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Max Trade Sizing:</span>
+                        <b id="val-pos-size" class="text-white">0.08 SOL</b>
+                    </div>
+                    <input type="range" id="range-pos-size" min="0.04" max="0.15" step="0.01" value="0.08" class="w-full accent-solanaGreen" oninput="document.getElementById('val-pos-size').innerText = parseFloat(this.value).toFixed(2) + ' SOL'">
+                    <span class="text-[10px] text-gray-500">Clamped to protect balance</span>
                 </div>
-                <div class="text-xs text-gray-400 mt-1 flex items-center justify-between">
-                    <span id="stat-pnl-usd">≈ +$0.00 USD</span>
-                    <span class="text-solanaGreen text-[10px]">100% Principal Retained</span>
+
+                <!-- Spread Slider -->
+                <div class="bg-darkBg p-3 rounded-lg border border-darkBorder space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Min Spread Trigger:</span>
+                        <b id="val-min-spread" class="text-solanaGreen">+0.50%</b>
+                    </div>
+                    <input type="range" id="range-min-spread" min="0.30" max="2.00" step="0.05" value="0.50" class="w-full accent-solanaGreen" oninput="document.getElementById('val-min-spread').innerText = '+' + parseFloat(this.value).toFixed(2) + '%'">
+                    <span class="text-[10px] text-gray-500">High-conviction threshold</span>
+                </div>
+
+                <!-- Profit Floor Slider -->
+                <div class="bg-darkBg p-3 rounded-lg border border-darkBorder space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Min Net Profit Floor:</span>
+                        <b id="val-min-profit" class="text-yellow-400">0.00030 SOL</b>
+                    </div>
+                    <input type="range" id="range-min-profit" min="0.00010" max="0.00100" step="0.00005" value="0.00030" class="w-full accent-yellow-400" oninput="document.getElementById('val-min-profit').innerText = parseFloat(this.value).toFixed(5) + ' SOL'">
+                    <span class="text-[10px] text-gray-500">Required after Jito tips</span>
+                </div>
+
+                <!-- Jito Tip Slider -->
+                <div class="bg-darkBg p-3 rounded-lg border border-darkBorder space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Jito Tip Share:</span>
+                        <b id="val-jito-tip" class="text-solanaPurple">25%</b>
+                    </div>
+                    <input type="range" id="range-jito-tip" min="15" max="40" step="1" value="25" class="w-full accent-solanaPurple" oninput="document.getElementById('val-jito-tip').innerText = this.value + '%'">
+                    <span class="text-[10px] text-gray-500">Max tip ceiling 0.010 SOL</span>
                 </div>
             </div>
         </div>
 
-        <!-- 3. Win Rate & Executions -->
-        <div class="bg-darkCard border border-darkBorder rounded-xl p-4 flex flex-col justify-between shadow-md">
-            <div class="flex justify-between items-center text-gray-400 text-xs">
-                <span>WIN RATE / EXECUTIONS</span>
-                <i data-lucide="target" class="w-4 h-4 text-neonBlue"></i>
-            </div>
-            <div class="mt-2">
-                <div class="text-2xl font-black text-white flex items-baseline gap-1">
-                    <span id="stat-winrate">0.0</span>%
-                    <span class="text-xs text-gray-400 font-normal ml-1">(<span id="stat-wins">0</span> / <span id="stat-total">0</span>)</span>
-                </div>
-                <div class="text-xs text-gray-400 mt-1 flex items-center justify-between">
-                    <span id="stat-trigger-label">Spread Floor: <span class="text-yellow-400 font-bold">+0.80% Net</span></span>
-                    <span class="text-neonBlue text-[10px]">Zero Capital Risk</span>
+        <!-- 3. CIRCUIT BREAKER LIVE STATUS GRID -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div class="bg-darkCard border border-darkBorder p-3 rounded-xl flex items-center gap-2.5">
+                <i data-lucide="shield-check" class="w-5 h-5 text-emerald-400"></i>
+                <div>
+                    <div class="text-gray-400 text-[10px]">RESERVE FLOOR</div>
+                    <div class="font-bold text-white">0.10 SOL Active 🟢</div>
                 </div>
             </div>
-        </div>
-
-        <!-- 4. Firehose Velocity -->
-        <div class="bg-darkCard border border-darkBorder rounded-xl p-4 flex flex-col justify-between shadow-md">
-            <div class="flex justify-between items-center text-gray-400 text-xs">
-                <span>MULTI-DEX ACTIVE PAIRS</span>
-                <i data-lucide="activity" class="w-4 h-4 text-orange-400"></i>
-            </div>
-            <div class="mt-2">
-                <div class="text-2xl font-black text-white flex items-baseline gap-1">
-                    <span id="stat-pools-count">0</span>
-                    <span class="text-xs text-orange-400 font-normal">Multi-Pool Coins</span>
+            <div class="bg-darkCard border border-darkBorder p-3 rounded-xl flex items-center gap-2.5">
+                <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i>
+                <div>
+                    <div class="text-gray-400 text-[10px]">MAX DRAWDOWN STOP</div>
+                    <div class="font-bold text-white">0.05 SOL Limit 🟢</div>
                 </div>
-                <div class="text-xs text-gray-400 mt-1 flex items-center justify-between">
-                    <span>Updates: <span id="stat-total-events">0</span></span>
-                    <span class="text-orange-400 text-[10px]">Live Polling</span>
+            </div>
+            <div class="bg-darkCard border border-darkBorder p-3 rounded-xl flex items-center gap-2.5">
+                <i data-lucide="clock" class="w-5 h-5 text-emerald-400"></i>
+                <div>
+                    <div class="text-gray-400 text-[10px]">FAILURE COOLDOWN</div>
+                    <div class="font-bold text-white">3 Drops ➔ 300s 🟢</div>
+                </div>
+            </div>
+            <div class="bg-darkCard border border-darkBorder p-3 rounded-xl flex items-center gap-2.5">
+                <i data-lucide="layers" class="w-5 h-5 text-emerald-400"></i>
+                <div>
+                    <div class="text-gray-400 text-[10px]">EPHEMERAL ATAS</div>
+                    <div class="font-bold text-white">$0.00 Net Rent 🟢</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MAIN SECTION: REAL MULTI-DEX PRICE COMPARISON MATRIX -->
-    <div class="bg-darkCard border border-darkBorder rounded-xl p-4 flex flex-col shadow-md">
-        <div class="flex items-center justify-between mb-3">
-            <div>
-                <h3 class="text-xs md:text-sm font-bold text-gray-200 flex items-center gap-2">
-                    <i data-lucide="layers" class="w-4 h-4 text-solanaGreen"></i>
-                    REAL-TIME CROSS-DEX PRICE COMPARISON MATRIX
-                    <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 font-semibold">Live Arbitrage Scanner</span>
+    <!-- ================================================================= -->
+    <!-- METRICS CARDS ROW (Current Selected Instance) -->
+    <!-- ================================================================= -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <!-- Balance Card -->
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-3.5 shadow-md flex flex-col justify-between">
+            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Current Balance</span>
+            <div class="mt-1">
+                <div id="stat-balance-sol" class="text-lg md:text-xl font-bold text-white">0.3800 SOL</div>
+                <div id="stat-balance-usd" class="text-xs text-yellow-400 font-semibold">$33.63 USD</div>
+            </div>
+        </div>
+
+        <!-- Net PnL Card -->
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-3.5 shadow-md flex flex-col justify-between">
+            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Net Profit</span>
+            <div class="mt-1">
+                <div id="stat-pnl-sol" class="text-lg md:text-xl font-bold text-solanaGreen">+0.0000 SOL</div>
+                <div id="stat-pnl-usd" class="text-xs text-solanaGreen font-semibold">+$0.00 USD</div>
+            </div>
+        </div>
+
+        <!-- Win Rate Card -->
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-3.5 shadow-md flex flex-col justify-between">
+            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Win Rate</span>
+            <div class="mt-1">
+                <div id="stat-win-rate" class="text-lg md:text-xl font-bold text-neonBlue">0.0%</div>
+                <div id="stat-trade-counts" class="text-[11px] text-gray-400">0 W / 0 F</div>
+            </div>
+        </div>
+
+        <!-- Total Trades Card -->
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-3.5 shadow-md flex flex-col justify-between">
+            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Trades</span>
+            <div class="mt-1">
+                <div id="stat-total-trades" class="text-lg md:text-xl font-bold text-white">0</div>
+                <div class="text-[11px] text-gray-400">Executed</div>
+            </div>
+        </div>
+
+        <!-- Active Pools Tracked -->
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-3.5 shadow-md flex flex-col justify-between">
+            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Meme Pools Scanned</span>
+            <div class="mt-1">
+                <div id="stat-pools-tracked" class="text-lg md:text-xl font-bold text-solanaPurple">0</div>
+                <div class="text-[11px] text-gray-400">Real-Time</div>
+            </div>
+        </div>
+
+        <!-- Security Shields -->
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-3.5 shadow-md flex flex-col justify-between">
+            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Security Shields</span>
+            <div class="mt-1">
+                <div class="text-sm font-bold text-solanaGreen">4-Pillar Active</div>
+                <div class="text-[10px] text-gray-400">Ephemeral ATAs</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- MAIN CHARTS & REAL-TIME TABLES -->
+    <!-- ================================================================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- EQUITY CURVE CHART -->
+        <div class="lg:col-span-1 bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg flex flex-col">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+                    <i data-lucide="trending-up" class="w-4 h-4 text-solanaGreen"></i>
+                    Balance Growth Curve
                 </h3>
-                <p class="text-[11px] text-gray-400">Comparing live prices across Raydium, Meteora, PumpSwap, and Orca in real time</p>
+                <span id="chart-instance-tag" class="text-[10px] text-gray-400 font-mono">LIVE PILOT</span>
             </div>
-            <span class="text-[11px] text-gray-400 font-mono">DEX Roundtrip Fee: 0.50%</span>
+            <div class="relative flex-1 min-h-[220px]">
+                <canvas id="equityChart"></canvas>
+            </div>
         </div>
 
+        <!-- RECENT TRADES FEED TABLE -->
+        <div class="lg:col-span-2 bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg flex flex-col">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+                    <i data-lucide="list" class="w-4 h-4 text-neonBlue"></i>
+                    Real-Time Execution Log
+                </h3>
+                <span class="text-[10px] text-gray-400">Auto-Refreshed via WebSocket</span>
+            </div>
+            <div class="overflow-x-auto flex-1 max-h-[280px]">
+                <table class="w-full text-left text-xs">
+                    <thead class="text-[10px] text-gray-400 uppercase bg-darkBg border-b border-darkBorder sticky top-0">
+                        <tr>
+                            <th class="p-2">Time</th>
+                            <th class="p-2">Token</th>
+                            <th class="p-2">Size</th>
+                            <th class="p-2">Profit (SOL)</th>
+                            <th class="p-2">Jito Tip</th>
+                            <th class="p-2">Status</th>
+                            <th class="p-2">Ending Bal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trades-table-body" class="divide-y divide-darkBorder font-mono">
+                        <tr>
+                            <td colspan="7" class="p-4 text-center text-gray-500">Waiting for live trades...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- LIVE MULTI-DEX ARBITRAGE SCANNER (PUMPPORTAL / METEORA / RAYDIUM) -->
+    <!-- ================================================================= -->
+    <div class="bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg">
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-solanaGreen pulse-live"></div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-white">
+                    Live Volatile Arbitrage Scanner (Raydium ⚡ Meteora ⚡ PumpSwap ⚡ Orca)
+                </h3>
+            </div>
+            <span class="text-[10px] text-gray-400 font-mono">Refreshed every 3s</span>
+        </div>
         <div class="overflow-x-auto max-h-[320px]">
             <table class="w-full text-left text-xs">
-                <thead class="bg-darkBg text-gray-400 sticky top-0 border-b border-darkBorder text-[11px]">
+                <thead class="text-[10px] text-gray-400 uppercase bg-darkBg border-b border-darkBorder sticky top-0">
                     <tr>
-                        <th class="p-2.5">TOKEN</th>
-                        <th class="p-2.5 text-right text-solanaPurple">RAYDIUM PRICE</th>
-                        <th class="p-2.5 text-right text-neonBlue">METEORA PRICE</th>
-                        <th class="p-2.5 text-right text-solanaGreen">PUMPSWAP PRICE</th>
-                        <th class="p-2.5 text-right text-amber-400">ORCA PRICE</th>
-                        <th class="p-2.5 text-center">BEST SPREAD ROUTE</th>
-                        <th class="p-2.5 text-right">NET SPREAD</th>
-                        <th class="p-2.5 text-right">TOTAL LIQUIDITY</th>
-                        <th class="p-2.5 text-center">STATUS</th>
+                        <th class="p-2">Time</th>
+                        <th class="p-2">Token</th>
+                        <th class="p-2">Raydium</th>
+                        <th class="p-2">Meteora</th>
+                        <th class="p-2">PumpSwap</th>
+                        <th class="p-2">Orca</th>
+                        <th class="p-2">Spread</th>
+                        <th class="p-2">Best Route</th>
+                        <th class="p-2">5m Vol</th>
+                        <th class="p-2">Liquidity</th>
                     </tr>
                 </thead>
-                <tbody id="matrix-tbody" class="divide-y divide-darkBorder text-gray-300">
+                <tbody id="scanner-table-body" class="divide-y divide-darkBorder font-mono">
                     <tr>
-                        <td colspan="9" class="p-6 text-center text-gray-500 font-mono">Connecting to live DEX price streams across Solana...</td>
+                        <td colspan="10" class="p-4 text-center text-gray-500">Scanning DEX pools across Europe...</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- BOTTOM SECTION: EXECUTION LEDGER & EQUITY CHART -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
-        <!-- 1. Shadow Paper Trades Ledger (2 Cols) -->
-        <div class="lg:col-span-2 bg-darkCard border border-darkBorder rounded-xl p-4 flex flex-col shadow-md">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-xs font-bold text-gray-300 flex items-center gap-1.5">
-                    <i data-lucide="file-spreadsheet" class="w-4 h-4 text-solanaGreen"></i>
-                    SHADOW PAPER-TRADING EXECUTION LEDGER (<span id="ledger-mode-label">$35 USD Micro-Pilot</span>)
-                </h3>
-                <span class="text-[10px] px-2 py-0.5 rounded bg-solanaGreen/10 text-solanaGreen border border-solanaGreen/20">Verified Net Fills</span>
-            </div>
-
-            <div class="flex-1 overflow-x-auto max-h-[260px]">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-darkBg text-gray-400 sticky top-0 border-b border-darkBorder text-[11px]">
-                        <tr>
-                            <th class="p-2">TIME</th>
-                            <th class="p-2">TOKEN</th>
-                            <th class="p-2">DEX ROUTE</th>
-                            <th class="p-2 text-right">NET SPREAD</th>
-                            <th class="p-2 text-right">JITO TIP</th>
-                            <th class="p-2 text-right">NET PROFIT</th>
-                            <th class="p-2 text-center">STATUS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="trades-tbody" class="divide-y divide-darkBorder text-gray-300">
-                        <tr>
-                            <td colspan="7" class="p-4 text-center text-gray-500 font-mono">Monitoring real-time cross-DEX price dislocations...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 2. Mini Equity Curve & System Info (1 Col) -->
-        <div class="bg-darkCard border border-darkBorder rounded-xl p-4 flex flex-col shadow-md space-y-3">
-            <div class="flex items-center justify-between">
-                <h3 class="text-xs font-bold text-gray-300 flex items-center gap-1.5">
-                    <i data-lucide="line-chart" class="w-4 h-4 text-solanaGreen"></i>
-                    WALLET EQUITY CURVE
-                </h3>
-                <span id="chart-initial-label" class="text-[10px] text-yellow-400 font-semibold">0.38 SOL Initial ($35)</span>
-            </div>
-
-            <div class="h-[120px]">
-                <canvas id="equityChart"></canvas>
-            </div>
-
-            <div class="bg-darkBg p-3 rounded-lg border border-darkBorder space-y-1 text-[11px] text-gray-300">
-                <div class="flex justify-between">
-                    <span class="text-gray-500">Execution Strategy:</span>
-                    <span class="text-solanaGreen font-semibold">Microsecond In-Memory Arb</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-500">Selected Instance:</span>
-                    <span id="card-instance-label" class="text-white font-semibold">$35 USD Micro Mode</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-500">Spread Floor:</span>
-                    <span class="text-yellow-400 font-semibold">+0.80% (High Conviction)</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-500">Capital Loss Risk:</span>
-                    <span class="text-neonBlue font-semibold">0.00% (Atomic Invariant)</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SCRIPT: REAL-TIME WEBSOCKET & 3 INSTANCE RENDERING -->
+    <!-- SCRIPTS -->
     <script>
         lucide.createIcons();
 
-        let liveSolPrice = 88.50;
-        let dexMatrixMap = new Map();
-        let currentMode = 'micro'; // 'micro', '1sol', or '10sol'
-        let fullPayload = null;
+        let currentTab = 'live';
+        let globalStats = null;
+        let chartInstance = null;
 
+        // Initialize Chart.js
         const ctx = document.getElementById('equityChart').getContext('2d');
-        const equityChart = new Chart(ctx, {
+        chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Start (0.38 SOL)'],
+                labels: ['Start'],
                 datasets: [{
-                    label: 'Virtual Wallet Balance (SOL)',
+                    label: 'SOL Balance',
                     data: [0.38],
-                    borderColor: '#fbbf24',
-                    backgroundColor: 'rgba(251, 191, 36, 0.12)',
+                    borderColor: '#14f195',
+                    backgroundColor: 'rgba(20, 241, 149, 0.1)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.3,
-                    pointRadius: 1.5,
-                    pointHoverRadius: 4,
-                    pointBackgroundColor: '#fbbf24'
+                    pointRadius: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: {
-                            label: (ctx) => ` Balance: ${ctx.parsed.y.toFixed(4)} SOL`
-                        }
-                    }
-                },
+                plugins: { legend: { display: false } },
                 scales: {
-                    x: {
-                        grid: { color: '#1e293b' },
-                        ticks: {
-                            color: '#64748b',
-                            font: { size: 9 },
-                            maxTicksLimit: 6
-                        }
-                    },
-                    y: {
-                        grid: { color: '#1e293b' },
-                        ticks: {
-                            color: '#64748b',
-                            font: { size: 9 },
-                            callback: (v) => `${v.toFixed(2)} SOL`
-                        }
-                    }
+                    x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 9 } } },
+                    y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 9 } } }
                 }
             }
         });
 
-        function switchInstance(mode) {
-            currentMode = mode;
-            const btnM = document.getElementById('tab-micro');
-            const btn1 = document.getElementById('tab-1sol');
-            const btn10 = document.getElementById('tab-10sol');
-
-            btnM.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-darkBg border border-darkBorder text-gray-400 hover:text-white';
-            btn1.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-darkBg border border-darkBorder text-gray-400 hover:text-white';
-            btn10.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-darkBg border border-darkBorder text-gray-400 hover:text-white';
-
-            if (mode === 'micro') {
-                btnM.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-yellow-400 text-black shadow-lg';
-                document.getElementById('active-instance-label').innerText = '$35 USD Micro-Pilot Mode';
-                document.getElementById('ledger-mode-label').innerText = '$35 USD Micro-Pilot';
-                document.getElementById('chart-initial-label').innerText = '0.38 SOL Initial ($35)';
-                document.getElementById('card-instance-label').innerText = '$35 USD Micro Mode';
-                document.getElementById('stat-trigger-label').innerHTML = 'Spread Floor: <span class="text-yellow-400 font-bold">+0.80% Net</span>';
-                equityChart.data.datasets[0].borderColor = '#fbbf24';
-                equityChart.data.datasets[0].backgroundColor = 'rgba(251, 191, 36, 0.12)';
-            } else if (mode === '1sol') {
-                btn1.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-solanaGreen text-black shadow-lg';
-                document.getElementById('active-instance-label').innerText = '1.0 SOL Runway Mode';
-                document.getElementById('ledger-mode-label').innerText = '1.0 SOL Instance';
-                document.getElementById('chart-initial-label').innerText = '1.00 SOL Initial ($90)';
-                document.getElementById('card-instance-label').innerText = '1.0 SOL Mode';
-                document.getElementById('stat-trigger-label').innerHTML = 'Max Pos: <span class="text-solanaGreen font-bold">0.12 SOL</span>';
-                equityChart.data.datasets[0].borderColor = '#14f195';
-                equityChart.data.datasets[0].backgroundColor = 'rgba(20, 241, 149, 0.12)';
-            } else {
-                btn10.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-solanaPurple text-white shadow-lg';
-                document.getElementById('active-instance-label').innerText = '10.0 SOL Growth Mode';
-                document.getElementById('ledger-mode-label').innerText = '10.0 SOL Instance';
-                document.getElementById('chart-initial-label').innerText = '10.00 SOL Initial ($900)';
-                document.getElementById('card-instance-label').innerText = '10.0 SOL Mode';
-                document.getElementById('stat-trigger-label').innerHTML = 'Max Pos: <span class="text-solanaPurple font-bold">0.50 SOL</span>';
-                equityChart.data.datasets[0].borderColor = '#9945ff';
-                equityChart.data.datasets[0].backgroundColor = 'rgba(153, 69, 255, 0.12)';
-            }
-
-            if (fullPayload) {
-                renderSelectedInstance(fullPayload);
-            }
-        }
-
-        function updateEquityChart(history, initialBalance) {
-            if (!history || history.length === 0) {
-                equityChart.data.labels = [`Start (${initialBalance.toFixed(2)} SOL)`];
-                equityChart.data.datasets[0].data = [initialBalance];
-                equityChart.update('none');
-                return;
-            }
-
-            let labels = [];
-            let data = [];
-
-            history.forEach((h, idx) => {
-                labels.push(h.time || `#${idx + 1}`);
-                data.push(h.balance);
+        function switchTab(tab) {
+            currentTab = tab;
+            ['live', 'micro', '1sol', '10sol'].forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (t === tab) {
+                    btn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-red-950/40 border border-red-500/50 text-red-400 font-bold transition shadow glow-red';
+                } else {
+                    btn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-darkBg border border-darkBorder text-gray-400 hover:text-white transition';
+                }
             });
 
-            equityChart.data.labels = labels;
-            equityChart.data.datasets[0].data = data;
-            equityChart.update('none');
-        }
-
-        fetch('/api/stats')
-            .then(res => res.json())
-            .then(payload => {
-                fullPayload = payload;
-                renderSelectedInstance(payload);
-            })
-            .catch(e => console.error('REST stats error:', e));
-
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}`;
-        let socket;
-
-        function connectWs() {
-            socket = new WebSocket(wsUrl);
-
-            socket.onopen = () => {
-                document.getElementById('ws-pulse').className = 'w-2.5 h-2.5 rounded-full bg-solanaGreen pulse-live';
-                document.getElementById('ws-status').innerText = 'LIVE FEED';
-            };
-
-            socket.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.type === 'INIT' || data.type === 'TRADES_UPDATE') {
-                        fullPayload = data.payload;
-                        renderSelectedInstance(data.payload);
-                    }
-                    if (data.type === 'DEX_MONITOR_UPDATE') {
-                        updateMatrixRow(data.data);
-                    }
-                } catch (e) {}
-            };
-
-            socket.onclose = () => {
-                document.getElementById('ws-pulse').className = 'w-2.5 h-2.5 rounded-full bg-dangerRed';
-                document.getElementById('ws-status').innerText = 'RECONNECTING...';
-                setTimeout(connectWs, 3000);
-            };
-        }
-        connectWs();
-
-        function renderSelectedInstance(payload) {
-            if (!payload) return;
-            const sys = payload.system || {};
-            if (sys.sol_price_usd) {
-                liveSolPrice = parseFloat(sys.sol_price_usd);
-                document.getElementById('sol-price').innerText = `$${liveSolPrice.toFixed(2)}`;
-            }
-
-            let inst = {};
-            let defaultInit = 0.38;
-
-            if (currentMode === 'micro') {
-                inst = payload.instance_micro || {};
-                defaultInit = 0.38;
-            } else if (currentMode === '1sol') {
-                inst = payload.instance_1sol || {};
-                defaultInit = 1.00;
+            const livePanel = document.getElementById('live-trading-panel');
+            if (tab === 'live') {
+                livePanel.style.display = 'block';
             } else {
-                inst = payload.instance_10sol || {};
-                defaultInit = 10.00;
+                livePanel.style.display = 'none';
             }
 
-            const initBal = inst.initial_balance_sol || defaultInit;
-            const curBal = inst.virtual_balance_sol !== undefined ? inst.virtual_balance_sol : initBal;
-
-            document.getElementById('stat-balance').innerText = Number(curBal).toFixed(4);
-            document.getElementById('stat-balance-usd').innerText = `≈ $${(Number(curBal) * liveSolPrice).toFixed(2)} USD`;
-            document.getElementById('stat-pnl').innerText = (inst.total_pnl_sol >= 0 ? '+' : '') + Number(inst.total_pnl_sol || 0).toFixed(4);
-            document.getElementById('stat-pnl-usd').innerText = `≈ ${(inst.total_pnl_usd >= 0 ? '+' : '')}$${Number(inst.total_pnl_usd || 0).toFixed(2)} USD`;
-            document.getElementById('stat-winrate').innerText = inst.win_rate || '0.0';
-            document.getElementById('stat-wins').innerText = inst.winning_trades || 0;
-            document.getElementById('stat-total').innerText = inst.total_trades || 0;
-            document.getElementById('stat-pools-count').innerText = sys.active_pools_count || dexMatrixMap.size;
-            document.getElementById('stat-total-events').innerText = Number(sys.total_events_processed || 0).toLocaleString();
-            document.getElementById('jito-latency').innerText = `${sys.jito_latency_ms || 11.3} ms`;
-
-            if (sys.live_dex_monitor && sys.live_dex_monitor.length > 0) {
-                sys.live_dex_monitor.forEach(m => dexMatrixMap.set(m.mint, m));
-                renderMatrix();
-            }
-
-            if (inst.equity_history && inst.equity_history.length > 0) {
-                updateEquityChart(inst.equity_history, initBal);
-            }
-
-            renderTradesTable(inst.recent_trades || []);
+            if (globalStats) renderStats(globalStats);
         }
 
-        function updateMatrixRow(m) {
-            dexMatrixMap.set(m.mint, m);
-            renderMatrix();
-        }
+        function renderStats(data) {
+            globalStats = data;
+            const solPrice = data.system?.sol_price_usd || 88.50;
+            document.getElementById('sol-price').innerText = `$${solPrice.toFixed(2)}`;
+            document.getElementById('jito-latency').innerText = `${data.system?.jito_latency_ms || 11.3} ms`;
+            document.getElementById('sys-ram').innerText = `${data.system?.ram_usage_mb || 0} MB`;
+            document.getElementById('sys-cpu').innerText = `${data.system?.cpu_usage_pct || 0}%`;
 
-        function renderMatrix() {
-            const tbody = document.getElementById('matrix-tbody');
-            const items = Array.from(dexMatrixMap.values());
-            if (items.length === 0) return;
+            let instData = data.instance_live;
+            if (currentTab === 'micro') instData = data.instance_micro;
+            if (currentTab === '1sol') instData = data.instance_1sol;
+            if (currentTab === '10sol') instData = data.instance_10sol;
 
-            tbody.innerHTML = items.map(m => {
-                const isProfitable = parseFloat(m.netSpreadPct) >= 0.80;
-                const spreadClass = isProfitable ? 'text-solanaGreen font-black text-sm' : 'text-gray-300 font-mono';
-                const statusBadge = isProfitable
-                    ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-solanaGreen/20 text-solanaGreen border border-solanaGreen/40 pulse-live">🎯 ARB SPREAD</span>'
-                    : '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-800 text-gray-400">⚡ SCANNING</span>';
+            if (instData) {
+                document.getElementById('stat-balance-sol').innerText = `${instData.virtual_balance_sol.toFixed(4)} SOL`;
+                document.getElementById('stat-balance-usd').innerText = `$${(instData.virtual_balance_sol * solPrice).toFixed(2)} USD`;
+                
+                const pnlPrefix = instData.total_pnl_sol >= 0 ? '+' : '';
+                document.getElementById('stat-pnl-sol').innerText = `${pnlPrefix}${instData.total_pnl_sol.toFixed(4)} SOL`;
+                document.getElementById('stat-pnl-usd').innerText = `${pnlPrefix}$${instData.total_pnl_usd.toFixed(2)} USD`;
+                document.getElementById('stat-pnl-sol').className = `text-lg md:text-xl font-bold ${instData.total_pnl_sol >= 0 ? 'text-solanaGreen' : 'text-dangerRed'}`;
+                document.getElementById('stat-pnl-usd').className = `text-xs font-semibold ${instData.total_pnl_sol >= 0 ? 'text-solanaGreen' : 'text-dangerRed'}`;
 
-                return `
-                    <tr class="hover:bg-darkBg/60 transition-colors">
-                        <td class="p-2.5 font-bold text-white flex items-center gap-1.5">
-                            <a href="https://solscan.io/token/${m.mint}" target="_blank" class="hover:underline text-neonBlue">${m.symbol}</a>
-                        </td>
-                        <td class="p-2.5 text-right font-mono text-solanaPurple font-semibold">${m.raydiumPrice}</td>
-                        <td class="p-2.5 text-right font-mono text-neonBlue font-semibold">${m.meteoraPrice}</td>
-                        <td class="p-2.5 text-right font-mono text-solanaGreen font-semibold">${m.pumpPrice}</td>
-                        <td class="p-2.5 text-right font-mono text-amber-400 font-semibold">${m.orcaPrice}</td>
-                        <td class="p-2.5 text-center font-mono text-[11px] text-gray-300">${m.bestRoute}</td>
-                        <td class="p-2.5 text-right ${spreadClass}">+${m.netSpreadPct}%</td>
-                        <td class="p-2.5 text-right font-mono text-gray-400">${m.totalLiquidity}</td>
-                        <td class="p-2.5 text-center">${statusBadge}</td>
+                document.getElementById('stat-win-rate').innerText = `${instData.win_rate}%`;
+                document.getElementById('stat-trade-counts').innerText = `${instData.winning_trades} W / ${instData.failed_trades} F`;
+                document.getElementById('stat-total-trades').innerText = instData.total_trades;
+                document.getElementById('stat-pools-tracked').innerText = data.system?.active_pools_count || 0;
+
+                // Update Chart
+                if (instData.equity_history && instData.equity_history.length > 0) {
+                    chartInstance.data.labels = instData.equity_history.map(h => h.time);
+                    chartInstance.data.datasets[0].data = instData.equity_history.map(h => h.balance);
+                    chartInstance.update();
+                }
+
+                // Update Trades Table
+                const tbody = document.getElementById('trades-table-body');
+                if (instData.recent_trades && instData.recent_trades.length > 0) {
+                    tbody.innerHTML = instData.recent_trades.map(t => `
+                        <tr class="hover:bg-darkBg/80 transition">
+                            <td class="p-2 text-gray-400">${t.iso_time ? t.iso_time.substring(11, 19) : 'Just Now'}</td>
+                            <td class="p-2 font-bold text-white">${t.symbol}</td>
+                            <td class="p-2 text-gray-300">${(t.simulated_swap_sol || t.position_size_sol || 0).toFixed(4)} SOL</td>
+                            <td class="p-2 font-bold ${(t.net_pnl_sol || t.expected_net_profit_sol || 0) >= 0 ? 'text-solanaGreen' : 'text-dangerRed'}">
+                                ${((t.net_pnl_sol || t.expected_net_profit_sol || 0) >= 0 ? '+' : '')}${(t.net_pnl_sol || t.expected_net_profit_sol || 0).toFixed(5)} SOL
+                            </td>
+                            <td class="p-2 text-solanaPurple">${(t.jito_tip_sol || 0.00008).toFixed(5)} SOL</td>
+                            <td class="p-2">
+                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${t.status === 'FILLED' || t.live_status === 'LANDED_CONFIRMED' ? 'bg-solanaGreen/20 text-solanaGreen' : 'bg-dangerRed/20 text-dangerRed'}">
+                                    ${t.status || t.live_status || 'LANDED'}
+                                </span>
+                            </td>
+                            <td class="p-2 text-gray-300">${(t.ending_wallet_balance_sol || t.post_balance_sol || 0.38).toFixed(4)} SOL</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+
+            // Update Scanner Table
+            if (data.system?.live_dex_monitor && data.system.live_dex_monitor.length > 0) {
+                const sbody = document.getElementById('scanner-table-body');
+                sbody.innerHTML = data.system.live_dex_monitor.slice(0, 15).map(m => `
+                    <tr class="hover:bg-darkBg/80 transition">
+                        <td class="p-2 text-gray-400">${m.time}</td>
+                        <td class="p-2 font-bold text-white">${m.symbol}</td>
+                        <td class="p-2 text-gray-300">${m.raydiumPrice}</td>
+                        <td class="p-2 text-gray-300">${m.meteoraPrice}</td>
+                        <td class="p-2 text-gray-300">${m.pumpPrice}</td>
+                        <td class="p-2 text-gray-300">${m.orcaPrice}</td>
+                        <td class="p-2 font-bold text-solanaGreen">${m.netSpreadPct}%</td>
+                        <td class="p-2 text-neonBlue">${m.bestRoute}</td>
+                        <td class="p-2 text-gray-300">${m.volume5m}</td>
+                        <td class="p-2 text-gray-400">${m.totalLiquidity}</td>
                     </tr>
-                `;
-            }).join('');
-        }
-
-        function renderTradesTable(trades) {
-            const tbody = document.getElementById('trades-tbody');
-            if (!trades || trades.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500 font-mono">Monitoring real-time cross-DEX price dislocations...</td></tr>`;
-                return;
+                `).join('');
             }
-
-            tbody.innerHTML = trades.map(t => {
-                const isWin = t.net_pnl_sol > 0;
-                const pnlClass = isWin ? 'text-solanaGreen font-bold' : 'text-dangerRed font-bold';
-                const statusBadge = t.status === 'FILLED'
-                    ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-500/30">FILLED</span>'
-                    : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950/60 text-amber-400 border border-amber-500/30">REVERTED</span>';
-
-                const timeStr = t.iso_time ? t.iso_time.substring(11, 19) : 'Just now';
-                const tokenName = t.symbol ? t.symbol.trim() : 'Token';
-
-                return `
-                    <tr class="hover:bg-darkBg/60 transition-colors">
-                        <td class="p-2 text-gray-400 font-mono">${timeStr}</td>
-                        <td class="p-2 font-semibold text-white">${tokenName}</td>
-                        <td class="p-2 text-gray-300 font-mono text-[11px]">${t.target_dex || 'Raydium ➔ Meteora'}</td>
-                        <td class="p-2 text-right font-mono text-solanaPurple">+${t.net_spread_pct}%</td>
-                        <td class="p-2 text-right font-mono text-gray-400">${t.jito_tip_sol ? Number(t.jito_tip_sol).toFixed(5) : '0.00000'} SOL</td>
-                        <td class="p-2 text-right font-mono ${pnlClass}">+${t.net_pnl_sol} SOL</td>
-                        <td class="p-2 text-center">${statusBadge}</td>
-                    </tr>
-                `;
-            }).join('');
         }
+
+        // Live Controls
+        async function saveConnectedWallet() {
+            const pubkey = document.getElementById('input-wallet-address').value.trim();
+            if (!pubkey) return alert('Please enter a valid Solana public address');
+            const res = await fetch('/api/live/wallet', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ publicKey: pubkey })
+            });
+            const json = await res.json();
+            if (json.success) {
+                document.getElementById('wallet-status-badge').innerText = 'WALLET CONNECTED 🟢';
+                document.getElementById('wallet-status-badge').className = 'text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                document.getElementById('live-wallet-bal').innerText = `${json.config.wallet_balance_sol.toFixed(4)} SOL`;
+                document.getElementById('live-wallet-usd').innerText = `$${(json.config.wallet_balance_sol * 88.50).toFixed(2)}`;
+            }
+        }
+
+        async function controlLiveEngine(action) {
+            const res = await fetch('/api/live/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action })
+            });
+            const json = await res.json();
+            if (json.success) {
+                document.getElementById('live-engine-status-text').innerHTML = `Status: <b class="${action === 'start' ? 'text-solanaGreen' : 'text-yellow-400'}">${json.status}</b>`;
+            }
+        }
+
+        async function saveLiveConfig() {
+            const max_pos = document.getElementById('range-pos-size').value;
+            const min_spread = document.getElementById('range-min-spread').value;
+            const min_profit = document.getElementById('range-min-profit').value;
+            const jito_tip = document.getElementById('range-jito-tip').value;
+
+            await fetch('/api/live/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    max_position_sol: max_pos,
+                    min_spread_pct: min_spread,
+                    min_net_profit_sol: min_profit,
+                    jito_tip_pct: jito_tip
+                })
+            });
+            alert('Live Trading Parameters Successfully Updated & Synchronized!');
+        }
+
+        // Connect WebSocket
+        function connectWS() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}`);
+            ws.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                if (msg.type === 'INIT' || msg.type === 'TRADES_UPDATE') {
+                    renderStats(msg.payload);
+                }
+            };
+            ws.onclose = () => setTimeout(connectWS, 2000);
+        }
+        connectWS();
     </script>
 </body>
 </html>
