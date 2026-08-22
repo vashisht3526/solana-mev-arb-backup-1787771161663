@@ -24,18 +24,63 @@ app.use(express.json());
 
 let liveSolPrice = 88.50;
 
+// Base58 encoder/decoder
+const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+function decodeBase58(s) {
+    const bytes = [0];
+    for (let i = 0; i < s.length; i++) {
+        const c = s[i];
+        const val = ALPHABET.indexOf(c);
+        if (val < 0) throw new Error('Illegal char');
+        for (let j = 0; j < bytes.length; j++) bytes[j] *= 58;
+        bytes[0] += val;
+        let carry = 0;
+        for (let j = 0; j < bytes.length; ++j) {
+            bytes[j] += carry;
+            carry = bytes[j] >> 8;
+            bytes[j] &= 0xff;
+        }
+        while (carry) {
+            bytes.push(carry & 0xff);
+            carry >>= 8;
+        }
+    }
+    for (let i = 0; i < s.length && s[i] === '1'; i++) bytes.push(0);
+    return Buffer.from(bytes.reverse());
+}
+
+function encodeBase58(buffer) {
+    const digits = [0];
+    for (let i = 0; i < buffer.length; i++) {
+        for (let j = 0; j < digits.length; j++) digits[j] <<= 8;
+        digits[0] += buffer[i];
+        let carry = 0;
+        for (let j = 0; j < digits.length; ++j) {
+            digits[j] += carry;
+            carry = (digits[j] / 58) | 0;
+            digits[j] %= 58;
+        }
+        while (carry) {
+            digits.push(carry % 58);
+            carry = (carry / 58) | 0;
+        }
+    }
+    for (let i = 0; buffer[i] === 0 && i < buffer.length - 1; i++) digits.push(0);
+    return digits.reverse().map(digit => ALPHABET[digit]).join('');
+}
+
 // Persistent Live Configuration
 let liveTradingConfig = {
-    wallet_pubkey: process.env.SOLANA_WALLET_PUBKEY || '',
-    wallet_balance_sol: 0.38,
-    is_engine_running: false,
-    max_position_sol: 0.08,
+    wallet_pubkey: 'AA1ihbehbPrMW4L9jWtdxJfkH76Up5F2azbeepQ1wixs',
+    wallet_balance_sol: 0.41,
+    is_engine_running: true,
+    max_position_sol: 0.05,
     min_spread_pct: 0.50,
     min_net_profit_sol: 0.00030,
     jito_tip_pct: 25,
     reserve_floor_sol: 0.10,
     max_drawdown_sol: 0.05,
-    status_label: 'IDLE / READY TO TRADE'
+    status_label: 'LIVE ACTIVE (Trading Real SOL)'
 };
 
 // Load saved config from disk on startup
@@ -43,10 +88,7 @@ if (fs.existsSync(LIVE_CONFIG_PATH)) {
     try {
         const saved = JSON.parse(fs.readFileSync(LIVE_CONFIG_PATH, 'utf-8'));
         liveTradingConfig = { ...liveTradingConfig, ...saved };
-        console.log(`📁 Loaded persistent live config for wallet: ${liveTradingConfig.wallet_pubkey || 'None'}`);
-    } catch (e) {
-        console.warn('⚠️ Could not parse live config file');
-    }
+    } catch (e) {}
 }
 
 function saveLiveConfigToDisk() {
@@ -95,6 +137,51 @@ function fetchLiveSolPrice() {
 }
 setInterval(fetchLiveSolPrice, 3000);
 fetchLiveSolPrice();
+
+function fetchOnChainBalance(pubkey) {
+    if (!pubkey || pubkey.length < 32) return;
+    const postData = JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'getBalance',
+        params: [pubkey]
+    });
+
+    const reqRpc = https.request({
+        hostname: 'api.mainnet-beta.solana.com',
+        port: 443,
+        path: '/',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(postData)
+        }
+    }, (rpcRes) => {
+        let rd = '';
+        rpcRes.on('data', c => rd += c);
+        rpcRes.on('end', () => {
+            try {
+                const rpcJson = JSON.parse(rd);
+                if (rpcJson.result && rpcJson.result.value !== undefined) {
+                    const balSol = rpcJson.result.value / 1_000_000_000.0;
+                    liveTradingConfig.wallet_balance_sol = Number(balSol.toFixed(4));
+                    saveLiveConfigToDisk();
+                    broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
+                }
+            } catch (e) {}
+        });
+    });
+    reqRpc.on('error', () => {});
+    reqRpc.write(postData);
+    reqRpc.end();
+}
+
+setInterval(() => {
+    if (liveTradingConfig.wallet_pubkey) {
+        fetchOnChainBalance(liveTradingConfig.wallet_pubkey);
+    }
+}, 5000);
+fetchOnChainBalance(liveTradingConfig.wallet_pubkey);
 
 function parseLogFile(filePath, initialBalance) {
     if (!fs.existsSync(filePath)) {
@@ -367,52 +454,52 @@ app.get('/api/live/status', (req, res) => {
     });
 });
 
+// ROBUST WALLET HANDLER: Accepts EITHER Public Key OR Private Key (Base58)
 app.post('/api/live/wallet', (req, res) => {
-    const { publicKey } = req.body;
-    if (publicKey && publicKey.length >= 32) {
-        liveTradingConfig.wallet_pubkey = publicKey;
+    let input = (req.body.publicKey || req.body.privateKey || '').trim();
+    if (!input) return res.status(400).json({ error: 'Please provide a valid Solana Address or Private Key' });
+
+    let derivedPubkey = '';
+    let secretKeyArray = null;
+
+    try {
+        if (input.length > 50) {
+            // It is an 88-char Base58 Private Key!
+            const rawBytes = decodeBase58(input);
+            if (rawBytes.length === 64) {
+                secretKeyArray = Array.from(rawBytes);
+                // The public key is the last 32 bytes of the 64-byte secret key
+                const pubKeyBytes = rawBytes.slice(32);
+                derivedPubkey = encodeBase58(pubKeyBytes);
+
+                // Save secret key securely to ~/.config/solana/mev_live.json
+                const solDir = '/home/ubuntu/.config/solana';
+                const keyPath = path.join(solDir, 'mev_live.json');
+                if (!fs.existsSync(solDir)) fs.mkdirSync(solDir, { recursive: true });
+                fs.writeFileSync(keyPath, JSON.stringify(secretKeyArray));
+                fs.chmodSync(keyPath, 0o400);
+            } else {
+                return res.status(400).json({ error: 'Invalid secret key byte length' });
+            }
+        } else {
+            // It is a 32-44 char standard Public Key
+            derivedPubkey = input;
+        }
+
+        liveTradingConfig.wallet_pubkey = derivedPubkey;
         saveLiveConfigToDisk();
 
-        // Verify balance from public RPC
-        const postData = JSON.stringify({
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'getBalance',
-            params: [publicKey]
-        });
+        // Fetch on-chain balance immediately
+        fetchOnChainBalance(derivedPubkey);
 
-        const reqRpc = https.request({
-            hostname: 'api.mainnet-beta.solana.com',
-            port: 443,
-            path: '/',
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(postData)
-            }
-        }, (rpcRes) => {
-            let rd = '';
-            rpcRes.on('data', c => rd += c);
-            rpcRes.on('end', () => {
-                try {
-                    const rpcJson = JSON.parse(rd);
-                    if (rpcJson.result && rpcJson.result.value !== undefined) {
-                        const balSol = rpcJson.result.value / 1_000_000_000.0;
-                        liveTradingConfig.wallet_balance_sol = Number(balSol.toFixed(4));
-                        saveLiveConfigToDisk();
-                    }
-                } catch (e) {}
-                broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
-                res.json({ success: true, config: liveTradingConfig });
-            });
+        res.json({
+            success: true,
+            publicKey: derivedPubkey,
+            config: liveTradingConfig
         });
-        reqRpc.on('error', () => {
-            res.json({ success: true, config: liveTradingConfig });
-        });
-        reqRpc.write(postData);
-        reqRpc.end();
-    } else {
-        res.status(400).json({ error: 'Invalid Solana Public Key' });
+    } catch (err) {
+        console.error('Wallet parse error:', err.message);
+        res.status(400).json({ error: 'Could not decode Solana key' });
     }
 });
 

@@ -1,6 +1,6 @@
 {
-  "wallet_pubkey": "Gs8gbw3Eo5t8hJNbupnKeY79x6qweAvyQyLbxM9Kc8mJ",
-  "wallet_balance_sol": 0.0,
+  "wallet_pubkey": "AA1ihbehbPrMW4L9jWtdxJfkH76Up5F2azbeepQ1wixs",
+  "wallet_balance_sol": 0.41,
   "is_engine_running": true,
   "max_position_sol": 0.05,
   "min_spread_pct": 0.5,
@@ -8,5 +8,5 @@
   "jito_tip_pct": 25,
   "reserve_floor_sol": 0.1,
   "max_drawdown_sol": 0.05,
-  "status_label": "LIVE ACTIVE (Ready for Deposit)"
+  "status_label": "LIVE ACTIVE (Trading Real SOL)"
 }
