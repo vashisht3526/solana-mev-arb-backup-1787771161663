@@ -1,6 +1,7 @@
 mod amm;
 mod jito;
 mod jito_builder;
+mod live_engine;
 mod math;
 mod paper_engine;
 mod router;
@@ -8,6 +9,7 @@ mod scanner;
 mod types;
 mod websocket_feed;
 
+use live_engine::LiveTradingEngine;
 use log::info;
 use paper_engine::PaperTradingEngine;
 use scanner::ArbitrageScanner;
@@ -21,17 +23,29 @@ async fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let args: Vec<String> = std::env::args().collect();
+    let is_live = args.iter().any(|arg| arg == "--live" || arg == "-l");
     let is_micro = args.iter().any(|arg| arg == "--micro" || arg == "--35usd" || arg == "-m");
     let is_1sol = args.iter().any(|arg| arg == "--1sol" || arg == "-1");
 
-    let (initial_virtual_sol, paper_log_file, max_position_sol, min_net_profit_sol, min_spread_pct, banner_label, engine_tag) = if is_micro {
+    let (initial_virtual_sol, paper_log_file, max_position_sol, min_net_profit_sol, min_spread_pct, banner_label, engine_tag) = if is_live {
+        let wallet_pubkey = std::env::var("SOLANA_WALLET_PUBKEY").unwrap_or_else(|_| "LIVE_TRADING_WALLET_ACTIVE".to_string());
+        (
+            0.38,
+            "data/live_trades.ndjson",
+            0.08, // Strict 0.08 SOL cap for live pilot
+            0.00030,
+            0.50,
+            "🛡️ LIVE MAINNET TRADING ENGINE (5-Pillar Circuit Breakers | Ephemeral ATAs | Zero Risk Leakage)",
+            "LIVE-MAINNET-ENGINE"
+        )
+    } else if is_micro {
         (
             0.38,
             "data/paper_trades_micro.ndjson",
             0.12,
             0.00050,
             0.80,
-            "⚡ $35 USD (0.38 SOL) MICRO-PILOT ENGINE (Pos: 0.12 SOL | Spread: +0.80% | High-Conviction)",
+            "⚡ $35 USD (0.38 SOL) MICRO-PILOT SHADOW ENGINE (Pos: 0.12 SOL | Spread: +0.80%)",
             "MICRO-35USD-ENGINE"
         )
     } else if is_1sol {
@@ -41,7 +55,7 @@ async fn main() {
             0.12,
             0.00008,
             0.40,
-            "⚡ 1.0 SOL CONSERVATIVE RUNWAY ENGINE (Max Pos: 0.12 SOL | Reserve: 0.15 SOL)",
+            "⚡ 1.0 SOL CONSERVATIVE RUNWAY SHADOW ENGINE (Max Pos: 0.12 SOL | Reserve: 0.15 SOL)",
             "1-SOL-ENGINE"
         )
     } else {
@@ -51,21 +65,21 @@ async fn main() {
             0.50,
             0.00030,
             0.20,
-            "⚡ 10.0 SOL AGGRESSIVE GROWTH ENGINE (Max Pos: 0.50 SOL | Reserve: 1.50 SOL)",
+            "⚡ 10.0 SOL AGGRESSIVE GROWTH SHADOW ENGINE (Max Pos: 0.50 SOL | Reserve: 1.50 SOL)",
             "10-SOL-ENGINE"
         )
     };
 
     println!("=======================================================================");
-    println!(" ⚡ SOLANA REAL-TIME STREAMING MEV ENGINE (Multi-Instance System) ⚡");
+    println!(" ⚡ SOLANA MEV ENGINE (Live Execution & Shadow Simulation System) ⚡");
     println!(" 🏷️ Mode: {}", banner_label);
-    println!(" 🤖 Verified by: GLM-5 + Kimi k2.5 + Qwen 3 Coder 480B");
-    println!(" 🚀 Mode: Direct Zero-Cost Stream (PumpPortal WS + Active Volatility Auditor)");
-    println!(" 🛡️ Execution: Atomic 2-Leg Router Invariant (require! final >= in + profit)");
+    println!(" 🤖 Verified by Council: GLM-5 + Kimi k2.5 + Qwen 3 Coder 480B");
+    println!(" 🚀 Stream: Direct Zero-Cost Stream (PumpPortal WS + Active Volatility Auditor)");
+    println!(" 🛡️ Invariant: Atomic Ephemeral ATA Bundle (require! final >= in + profit)");
     println!("=======================================================================");
 
-    info!("💰 Virtual Wallet Initial Balance: {:.4} SOL", initial_virtual_sol);
-    info!("📄 Paper Trade Output Log: {}", paper_log_file);
+    info!("💰 Starting Balance: {:.4} SOL", initial_virtual_sol);
+    info!("📄 Log Output: {}", paper_log_file);
     info!("⚡ Max Position Size per Arbitrage: {:.2} SOL", max_position_sol);
     info!("🎯 Minimum Net Profit Floor: {:.5} SOL", min_net_profit_sol);
     info!("🎯 Minimum Gross Spread Trigger: +{:.2}%", min_spread_pct);
@@ -117,6 +131,6 @@ async fn main() {
         }
     });
 
-    info!("🚀 Initializing High-Velocity Parallel Scanner...");
+    info!("🚀 Initializing Engine Event Loop...");
     scanner.run().await;
 }

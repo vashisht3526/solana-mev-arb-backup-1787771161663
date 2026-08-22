@@ -4,6 +4,8 @@ $REMOTE_HOST = "ubuntu@52.58.226.98"
 $typesContent = Get-Content -Raw "src\types.rs"
 $scannerContent = Get-Content -Raw "src\scanner.rs"
 $routerContent = Get-Content -Raw "src\router.rs"
+$liveEngineContent = Get-Content -Raw "src\live_engine.rs"
+$mainContent = Get-Content -Raw "src\main.rs"
 
 $remoteScript = @"
 cat << 'EOF' > /home/ubuntu/solana-mev-arb/src/types.rs
@@ -16,6 +18,14 @@ EOF
 
 cat << 'EOF' > /home/ubuntu/solana-mev-arb/src/router.rs
 $routerContent
+EOF
+
+cat << 'EOF' > /home/ubuntu/solana-mev-arb/src/live_engine.rs
+$liveEngineContent
+EOF
+
+cat << 'EOF' > /home/ubuntu/solana-mev-arb/src/main.rs
+$mainContent
 EOF
 
 source ~/.cargo/env
