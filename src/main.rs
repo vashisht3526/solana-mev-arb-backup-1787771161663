@@ -28,15 +28,15 @@ async fn main() {
     let is_1sol = args.iter().any(|arg| arg == "--1sol" || arg == "-1");
 
     let (initial_virtual_sol, paper_log_file, max_position_sol, min_net_profit_sol, min_spread_pct, banner_label, engine_tag, live_engine) = if is_live {
-        let wallet_pubkey = std::env::var("SOLANA_WALLET_PUBKEY").unwrap_or_else(|_| "LIVE_TRADING_WALLET_ACTIVE".to_string());
-        let live = Arc::new(LiveTradingEngine::new(&wallet_pubkey, 0.38, "data/live_trades.ndjson"));
+        let wallet_pubkey = "AA1ihbehbPrMW4L9jWtdxJfkH76Up5F2azbeepQ1wixs".to_string();
+        let live = Arc::new(LiveTradingEngine::new(&wallet_pubkey, 0.41, "data/live_trades.ndjson"));
         (
-            0.38,
+            0.41,
             "data/live_trades.ndjson",
-            0.08, // Strict 0.08 SOL cap for live pilot
+            0.05, // Strict 0.05 SOL risk limit per trade
             0.00030,
             0.50,
-            "🛡️ LIVE MAINNET TRADING ENGINE (5-Pillar Circuit Breakers | Ephemeral ATAs | Zero Risk Leakage)",
+            "🛡️ LIVE MAINNET TRADING ENGINE (Armed with Real Keypair: AA1ihbeh... | 0.41 SOL Bankroll)",
             "LIVE-MAINNET-ENGINE",
             Some(live)
         )
