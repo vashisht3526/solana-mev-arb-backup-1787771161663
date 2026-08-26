@@ -1,0 +1,438 @@
+{
+  "target_wallet": "MRiYA4oN3158fCV8evhuCofrDzbHyYvYnGZUDJvoCsa",
+  "balance_sol": 77.757220161,
+  "sample_size": 25,
+  "success_rate": "64.0%",
+  "program_frequency": {
+    "11111111111111111111111111111111": 27,
+    "ComputeBudget111111111111111111111111111111": 73,
+    "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij": 25,
+    "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA": 32,
+    "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ": 16,
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA": 121,
+    "LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo": 66,
+    "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG": 6,
+    "SV2EYYJyRz2YhfXwXnhNAevDEui5Q6yrfyo13WtupPF": 1,
+    "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc": 6,
+    "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb": 35,
+    "HpNfyc2Saw7RKkQd8nEL4khUcuPhQ7WwY1B2qjx8jxFq": 1,
+    "TessVdML9pBGgG9yGks7o4HewRaXVAMuoVj4x83GLQH": 2,
+    "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK": 3
+  },
+  "average_tip_sol": "0.000006",
+  "transactions": [
+    {
+      "signature": "sN8vdZicctcaHznJVhMbp4te4cnfhdfCZ9t6PD5Y6SpvDCXEYFaers6fCaodZkJKk3kGmSKRhYA48tyvH1tvtNg",
+      "slot": 441178529,
+      "blockTime": "2026-08-23T14:35:31.000Z",
+      "solDelta": -0.00001138,
+      "tipPaidSol": 0.00000638,
+      "feeLamports": 5000,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "3Zu9k9dcKxPw6ZBs2eHfpfNTKSkYvkSd78rtrc8WQtSsPdtZmpa6KhCXFJsBCgPSposUa3UZUPjibBVdUX1jLq3y",
+      "slot": 441178526,
+      "blockTime": "2026-08-23T14:35:30.000Z",
+      "solDelta": -0.000152269,
+      "tipPaidSol": 0,
+      "feeLamports": 152269,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "599MrjsgAz9pS3UBrh9yYLRRQSQSkAJ4F2dVZGNzNiCqr3TSt8AXHuRR3fJN9faeDe5qC3pa4asBZCBJMm5HGxeP",
+      "slot": 441178526,
+      "blockTime": "2026-08-23T14:35:30.000Z",
+      "solDelta": -0.000083553,
+      "tipPaidSol": 0,
+      "feeLamports": 83553,
+      "err": {
+        "InstructionError": [
+          2,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "2x8oCTNSEi8Wefz6VUdh8eSHQY4dNpBmHGUaiREMzVfnGtfmdiiC89zSuoikQxYtthSDHchsN6J7k9R4akZJ1Waq",
+      "slot": 441178524,
+      "blockTime": "2026-08-23T14:35:29.000Z",
+      "solDelta": -0.000018757,
+      "tipPaidSol": 0,
+      "feeLamports": 18757,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "3VrDaEEE2uYKr3GVfa2w9YRzji6jByBW5jWExCRuBNvhyzBEDn2oMkfG7yKGT4mDiwtWm9fKtD37hoMbJMG2Du58",
+      "slot": 441178513,
+      "blockTime": "2026-08-23T14:35:26.000Z",
+      "solDelta": -0.000418521,
+      "tipPaidSol": 0,
+      "feeLamports": 418521,
+      "err": {
+        "InstructionError": [
+          2,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "3vmz3hAcAAwxx5PcLVuxinPJAhZE8tRDbEbQ8uT3hPth1JikA7KPsbmMGkQdojohbYJxhJwGoyMfAAozD4vRee3",
+      "slot": 441178509,
+      "blockTime": "2026-08-23T14:35:24.000Z",
+      "solDelta": -0.000187583,
+      "tipPaidSol": 0,
+      "feeLamports": 187583,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "pNcCE9WVhUXQAA4UwMxF6EaTA32B54GuJiv3q89HVnpoFa2mysRm2fvSFU4i1FJ3uSsMMfsxcavLoQQnZqJNZy4",
+      "slot": 441178508,
+      "blockTime": "2026-08-23T14:35:24.000Z",
+      "solDelta": -0.000104171,
+      "tipPaidSol": 0,
+      "feeLamports": 104171,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "5m9iuCHs3XsEyr5cn7piYkTiFeQSfcoKRPdxmZrkdjZwxTwPHiZHCs5cr5uZr8aSgJ9fWffkZ6qfDzRQL5paGmS",
+      "slot": 441178506,
+      "blockTime": "2026-08-23T14:35:23.000Z",
+      "solDelta": -0.000133622,
+      "tipPaidSol": 0,
+      "feeLamports": 133622,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "4cevmByX59duYpasE8rivv5qMJ1q4917fCkH7G8qvNJCPQmSdFbesNpeGGpE3Rf6bc13yK2hgiz9CsPsSJeyxYb7",
+      "slot": 441178506,
+      "blockTime": "2026-08-23T14:35:23.000Z",
+      "solDelta": -0.000143564,
+      "tipPaidSol": 0,
+      "feeLamports": 143564,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "664RkbtP4o39Tw3Z5HdFnTiPUof3teJm2a1H7n9rJHUDpyaSJtLwJEj99G4wpSmtHPG8nRegGefByLVJz6PHmiyu",
+      "slot": 441178505,
+      "blockTime": "2026-08-23T14:35:23.000Z",
+      "solDelta": -0.00073353,
+      "tipPaidSol": 0,
+      "feeLamports": 733530,
+      "err": {
+        "InstructionError": [
+          2,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "5gFPuKGg4HbSeEx6GNCkrq3geA4KFpNvVuvXkSdqBeyzJDuwGt8MKf3Gx1DfwypZPFkvVes1hpvDGJYxZvNrhFwh",
+      "slot": 441178502,
+      "blockTime": "2026-08-23T14:35:22.000Z",
+      "solDelta": -0.000006374,
+      "tipPaidSol": 0,
+      "feeLamports": 6374,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "3yfTGWzF8vBSoWgiLsNsN4Z88dweNqSVJ7Y5EG8tnh4AmhkGfh4oFQqez4LAh33gyDjqFg9R5TE18CZTeHFwthfw",
+      "slot": 441178496,
+      "blockTime": "2026-08-23T14:35:19.000Z",
+      "solDelta": -0.00045924,
+      "tipPaidSol": 0,
+      "feeLamports": 459240,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "KdtMBuRcXvwGQm578j5C4b8rXLE1775Pd2R2z7LK9h9DWaPizV2PZfJWGG4VvA6D7sdCm3oHddZngtz9hZiJUv6",
+      "slot": 441178496,
+      "blockTime": "2026-08-23T14:35:19.000Z",
+      "solDelta": -0.000333488,
+      "tipPaidSol": 0,
+      "feeLamports": 333488,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "9dwTCxxNtxYXxSxjNtgbTd3sG144whkmK4BeU2FK5S8bZJ6zDmQWpLULkY8ynuUwxjXFkooKfEP5EVF8UVckZT2",
+      "slot": 441178491,
+      "blockTime": "2026-08-23T14:35:18.000Z",
+      "solDelta": -0.000007292,
+      "tipPaidSol": 0,
+      "feeLamports": 7292,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "yLCj1HEb6VqWeyymbFrLbg2k8n638UUKMNZFJ6Et5WZhChNbmmpaqFwFXeJcL4PcRtBpUeFzQfZTg6Uup4Esb9k",
+      "slot": 441178482,
+      "blockTime": "2026-08-23T14:35:15.000Z",
+      "solDelta": -0.00166014,
+      "tipPaidSol": 0,
+      "feeLamports": 1660140,
+      "err": {
+        "InstructionError": [
+          2,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "RPeaz5CDNwFkQP9gQyHsp9afgyHisb65LnbSkyx7fpDcukovW1MacDKfETFvFxn7rgPKmMKnverRsDgkJuoSv7q",
+      "slot": 441178443,
+      "blockTime": "2026-08-23T14:35:00.000Z",
+      "solDelta": -0.00015829,
+      "tipPaidSol": 0,
+      "feeLamports": 158290,
+      "err": {
+        "InstructionError": [
+          2,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "2P7LKLGWE1uiQgqCr82WqzGKS682cMtpkXbfheaXWe9VTfTHmg8y7Eawjc1Zgd43oMmREaSb5NqP1n8kuiKusgXp",
+      "slot": 441178443,
+      "blockTime": "2026-08-23T14:35:00.000Z",
+      "solDelta": -0.000170373,
+      "tipPaidSol": 0,
+      "feeLamports": 170373,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "5RWE1gEn8CVg7ZAjCBq5uzU6qe5nG5hC8RxnWsBiw3u6BfJAGK5D3tVsh14nqyqmG6MDmBQQ4qxchLgHx2Pqm376",
+      "slot": 441178439,
+      "blockTime": "2026-08-23T14:34:59.000Z",
+      "solDelta": -0.00204428,
+      "tipPaidSol": 0,
+      "feeLamports": 5000,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "izjqbRXbXKek9Qg1RLUMA6uiKACVWSLUKybefVsJQsuS6Yqq4MemfRRKeScumHa2os8RQmY1kU97FubNJk3VhQH",
+      "slot": 441178414,
+      "blockTime": "2026-08-23T14:34:50.000Z",
+      "solDelta": -0.00003975,
+      "tipPaidSol": 0,
+      "feeLamports": 39750,
+      "err": {
+        "InstructionError": [
+          2,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "21MGAMBKpASTtTizvBRCbaonyA3gUhccYKCgBtTRuy1N5FeCHR5gQLPnmmzFSr4KZKmZ8m2utFck7g5Qsax7kSkM",
+      "slot": 441178369,
+      "blockTime": "2026-08-23T14:34:33.000Z",
+      "solDelta": -0.000547249,
+      "tipPaidSol": 0,
+      "feeLamports": 547249,
+      "err": {
+        "InstructionError": [
+          2,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "4J8LsJnkENSMFgwFJvRBufmbMukgFcZrkd9Diz9riHdyyXdNfRVH1isrPukQr6vuoNcJGxxrDfjiY5T8ZPc4eHeG",
+      "slot": 441178362,
+      "blockTime": "2026-08-23T14:34:31.000Z",
+      "solDelta": -0.00001342,
+      "tipPaidSol": 0,
+      "feeLamports": 13420,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "2UC5aafpCC1kkgrGaFXEHm2hFXDdV5VhvYKnRDmrfwKt8yjLpgoJNqCA9JMWNsCPr4QxtfBbBaDTrtCsE7NGGC5n",
+      "slot": 441178362,
+      "blockTime": "2026-08-23T14:34:31.000Z",
+      "solDelta": -0.000021932,
+      "tipPaidSol": 0,
+      "feeLamports": 21932,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "RnYobGHBKs2fLCpW1kjoMdhAPSTbForfHfUP78MF5wb4qrR5YjfNXQe54p55RjJr2ejpuEcwRTRJGNnpYuHKxtn",
+      "slot": 441178343,
+      "blockTime": "2026-08-23T14:34:24.000Z",
+      "solDelta": -0.000005,
+      "tipPaidSol": 0,
+      "feeLamports": 5000,
+      "err": {
+        "InstructionError": [
+          2,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "43pRnRbMB4unt46NZVsMNtqB1TQBVik8c7ysJtc8sqQoJGj4ebhyus4XkZZArsnwQQWLn9iBn7FKak8FjWLzYJhA",
+      "slot": 441178317,
+      "blockTime": "2026-08-23T14:34:14.000Z",
+      "solDelta": -0.000007441,
+      "tipPaidSol": 0,
+      "feeLamports": 7441,
+      "err": null,
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    },
+    {
+      "signature": "3DKpCkeLtyjEAmGEAUrhnte8QmgBZRDw5Uv9u6C5eVX6PEAvmmCGCXdv1rzT3zuwhnsKE2p98eA15hhReKN5LyyS",
+      "slot": 441178310,
+      "blockTime": "2026-08-23T14:34:11.000Z",
+      "solDelta": -0.00017039,
+      "tipPaidSol": 0,
+      "feeLamports": 170390,
+      "err": {
+        "InstructionError": [
+          2,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "programs": [
+        "11111111111111111111111111111111",
+        "ComputeBudget111111111111111111111111111111",
+        "AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij"
+      ]
+    }
+  ]
+}

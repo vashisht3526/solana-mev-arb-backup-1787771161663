@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -244,6 +245,8 @@ pub struct ArbitrageOpportunity {
     pub mint: String,
     pub symbol: String,
     pub name: String,
+    pub buy_dex: String,
+    pub sell_dex: String,
     pub target_dex: String,
     pub pair_address: String,
     pub pump_price_usd: f64,
@@ -279,3 +282,99 @@ pub struct PaperTradeRecord {
     pub ending_wallet_balance_sol: f64,
     pub status: String, // "FILLED", "FAILED_FRONT_RUN", "FAILED_STALE_QUOTE", etc.
 }
+
+/// Decision classification for Raydium-Native Migration Sniping
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum MigrationDecision {
+    Accepted,
+    RejectedZombiePool { swap_count: usize },
+    RejectedKnife { ratio_to_p0: f64 },
+    RejectedVelocityDecay { decay_pct: f64 },
+    RejectedBuySellRatio { ratio: f64 },
+    RejectedShieldViolation { reason: String },
+    RejectedGhostSell { reason: String },
+}
+
+/// Active Simulated Holding Position for Migration Sniping Engine
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HoldingPosition {
+    pub position_id: String,
+    pub mint: String,
+    pub symbol: String,
+    pub pool_address: String,
+    pub entry_timestamp_ms: i64,
+    pub entry_price_usd: f64,
+    pub position_size_sol: f64,
+    pub token_amount: f64,
+    pub local_peak_price_usd: f64,
+    pub is_active: bool,
+}
+
+/// Complete Shadow Execution & Counterfactual Record for Migration Sniping
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MigrationShadowRecord {
+    pub event_id: String,
+    pub timestamp_ms: i64,
+    pub iso_time: String,
+    pub mint: String,
+    pub symbol: String,
+    pub pool_address: String,
+    pub initial_sol_liquidity: f64,
+    pub p0_open_price_usd: f64,
+    pub decision: MigrationDecision,
+    pub eval_price_usd: f64,
+    pub price_ratio_to_p0: f64,
+    pub velocity_decay_pct: f64,
+    pub buy_volume_sol: f64,
+    pub sell_volume_sol: f64,
+    pub buy_sell_volume_ratio: f64,
+    pub total_swaps: usize,
+    // Execution fields (if Accepted)
+    pub entry_price_usd: Option<f64>,
+    pub exit_price_usd: Option<f64>,
+    pub exit_reason: Option<String>, // "TAKE_PROFIT_10PCT", "TRAILING_STOP_5PCT", "HARD_STOP_10PCT", "TIME_STOP_10MIN", "TOXIC_QUARANTINE"
+    pub hold_duration_seconds: Option<u64>,
+    pub simulated_net_pnl_sol: Option<f64>,
+    pub simulated_net_pnl_usd: Option<f64>,
+    pub simulated_roi_pct: Option<f64>,
+    // Counterfactual 10m post-tracking (for tuning false negatives/positives)
+    pub counterfactual_p10m_usd: Option<f64>,
+    pub counterfactual_max_price_usd: Option<f64>,
+    pub would_have_profited: Option<bool>,
+    pub rug_detected: Option<bool>,
+}
+
+/// Volatile Micro-Cap Sweet Spot & Whale-Exclusion Zone ($5k - $2.5M TVL)
+/// Captures high retail volatility with wide spreads, excluding large institutional bots (>50 SOL).
+pub const MIN_VOLATILE_LIQUIDITY_USD: f64 = 5_000.0;
+pub const MAX_VOLATILE_LIQUIDITY_USD: f64 = 2_500_000.0;
+pub const WHALE_EXCLUSION_MIN_TVL: f64 = 5_000.0;
+pub const WHALE_EXCLUSION_MAX_TVL: f64 = 2_500_000.0;
+pub const TARGET_TRADE_SIZE_SOL: f64 = 0.15;            // 0.15 SOL target (dynamic sizing scales down for thin pools)
+
+/// 3-Hop Triangular Spatial Arbitrage Opportunity Candidate
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TriangularRouteOpportunity {
+    pub timestamp_ms: i64,
+    pub iso_time: String,
+    pub token_a_mint: String,
+    pub token_a_symbol: String,
+    pub token_b_mint: String, // Typically USDC or intermediate token
+    pub token_b_symbol: String,
+    pub leg1_dex: String,     // SOL -> TokenA (e.g. Raydium CPMM)
+    pub leg2_dex: String,     // TokenA -> TokenB (e.g. Meteora DLMM)
+    pub leg3_dex: String,     // TokenB -> SOL (e.g. Orca Whirlpool)
+    pub leg1_pool: String,
+    pub leg2_pool: String,
+    pub leg3_pool: String,
+    pub input_sol: f64,
+    pub expected_sol_out: f64,
+    pub gross_spread_pct: f64,
+    pub net_profit_sol: f64,
+    pub net_profit_usd: f64,
+    pub dynamic_jito_tip_sol: f64,
+    pub target_tvl_usd: f64,
+    pub is_whale_exclusion_zone: bool,
+}
+
+

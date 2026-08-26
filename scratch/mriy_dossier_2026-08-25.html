@@ -1,0 +1,540 @@
+<title>The MRiY Dossier</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #EDF1EF;
+    --surface: #FFFFFF;
+    --surface-2: #F6F9F7;
+    --ink: #22322C;
+    --ink-soft: #57685F;
+    --ink-strong: #0C1712;
+    --accent: #0E7C9C;
+    --accent-soft: #DCEEF3;
+    --good: #147A4E;
+    --warn: #96660F;
+    --crit: #B3372F;
+    --line: #CBD8D2;
+    --line-strong: #A2B7AE;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0B1114;
+      --surface: #111A1E;
+      --surface-2: #16222A;
+      --ink: #B4C7BF;
+      --ink-soft: #7E978D;
+      --ink-strong: #EDF6F1;
+      --accent: #56C4DE;
+      --accent-soft: #12333D;
+      --good: #43C98A;
+      --warn: #DBA44A;
+      --crit: #E0655C;
+      --line: #233842;
+      --line-strong: #38545F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B1114;
+    --surface: #111A1E;
+    --surface-2: #16222A;
+    --ink: #B4C7BF;
+    --ink-soft: #7E978D;
+    --ink-strong: #EDF6F1;
+    --accent: #56C4DE;
+    --accent-soft: #12333D;
+    --good: #43C98A;
+    --warn: #DBA44A;
+    --crit: #E0655C;
+    --line: #233842;
+    --line-strong: #38545F;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.62;
+    padding: clamp(20px, 4vw, 56px) clamp(14px, 4vw, 40px) 80px;
+  }
+  .sheet { max-width: 880px; margin: 0 auto; }
+
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--line-strong); }
+  a:hover { border-bottom-color: var(--accent); }
+  strong { color: var(--ink-strong); font-weight: 600; }
+  code, .num {
+    font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  code {
+    font-size: 0.86em;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.08em 0.35em;
+    color: var(--ink-strong);
+  }
+
+  /* ── masthead ─────────────────────────────────────── */
+  header.masthead { border-bottom: 2px solid var(--ink-strong); padding-bottom: 22px; margin-bottom: 26px; }
+  .eyebrow {
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 13px;
+    color: var(--accent);
+  }
+  h1 {
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    font-size: clamp(38px, 7vw, 58px);
+    line-height: 1.02;
+    letter-spacing: 0.005em;
+    color: var(--ink-strong);
+    text-wrap: balance;
+    margin-top: 10px;
+  }
+  .masthead-meta {
+    display: flex; flex-wrap: wrap; gap: 6px 26px;
+    margin-top: 16px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px; color: var(--ink-soft);
+  }
+  .masthead-meta span b { color: var(--ink); font-weight: 500; }
+
+  /* ── verdict strip ────────────────────────────────── */
+  .verdicts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
+    margin-bottom: 46px;
+  }
+  .verdict {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--accent);
+    padding: 14px 16px 16px;
+  }
+  .verdict .v-track {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 600; font-size: 12.5px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .verdict .v-num {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600; font-size: 24px;
+    color: var(--ink-strong);
+    margin: 6px 0 4px;
+    line-height: 1.1;
+  }
+  .verdict .v-num small { font-size: 13px; font-weight: 400; color: var(--ink-soft); }
+  .verdict .v-text { font-size: 13px; line-height: 1.45; color: var(--ink); }
+
+  /* ── sections ─────────────────────────────────────── */
+  section { margin-bottom: 52px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+  h2 {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 30px;
+    letter-spacing: 0.01em;
+    color: var(--ink-strong);
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+  .sec-head .tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px; color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .standfirst { max-width: 68ch; color: var(--ink); font-size: 16.5px; margin-bottom: 20px; }
+  p + p { margin-top: 12px; }
+  .prose { max-width: 68ch; }
+
+  h3 {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 600;
+    font-size: 19px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-strong);
+    margin: 28px 0 10px;
+  }
+
+  /* ── tables ───────────────────────────────────────── */
+  .tbl-wrap { overflow-x: auto; margin: 16px 0 8px; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; min-width: 520px; background: var(--surface); }
+  th {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 600; font-size: 13px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-soft);
+    text-align: left;
+    padding: 9px 14px;
+    border-bottom: 2px solid var(--line-strong);
+    white-space: nowrap;
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td .sub { display: block; font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
+
+  /* ── chips / pills ────────────────────────────────── */
+  .chip {
+    display: inline-block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px; font-weight: 500;
+    letter-spacing: 0.06em;
+    padding: 1px 8px 2px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .chip.copy   { color: var(--good);     border: 1px solid var(--good); }
+  .chip.partial{ color: var(--warn);     border: 1px solid var(--warn); }
+  .chip.no     { color: var(--crit);     border: 1px solid var(--crit); }
+  .chip.effort { color: var(--ink-soft); border: 1px solid var(--line-strong); }
+  .chip.impact { color: var(--accent);   border: 1px solid var(--accent); }
+
+  /* ── callouts ─────────────────────────────────────── */
+  .callout {
+    border-left: 3px solid var(--warn);
+    background: var(--surface);
+    padding: 14px 18px;
+    margin: 20px 0;
+    max-width: 74ch;
+  }
+  .callout.correct { border-left-color: var(--accent); }
+  .callout.good-news { border-left-color: var(--good); }
+  .callout h4 {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 600; font-size: 14px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    margin-bottom: 6px;
+    color: var(--ink-strong);
+  }
+  .callout p { font-size: 14.5px; }
+
+  ol.roadmap { list-style: none; counter-reset: step; max-width: 76ch; }
+  ol.roadmap li {
+    counter-increment: step;
+    position: relative;
+    padding: 16px 18px 16px 58px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    margin-bottom: 10px;
+  }
+  ol.roadmap li::before {
+    content: counter(step, decimal-leading-zero);
+    position: absolute; left: 16px; top: 16px;
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600; font-size: 15px;
+    color: var(--accent);
+  }
+  ol.roadmap li h4 { font-size: 15.5px; color: var(--ink-strong); font-weight: 600; }
+  ol.roadmap li p { font-size: 14px; margin-top: 4px; }
+  ol.roadmap li .chips { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+
+  ul.filters { list-style: none; max-width: 72ch; }
+  ul.filters li {
+    padding: 9px 0 9px 26px;
+    position: relative;
+    border-bottom: 1px dashed var(--line);
+    font-size: 14.5px;
+  }
+  ul.filters li::before {
+    content: "▸";
+    position: absolute; left: 6px;
+    color: var(--accent);
+  }
+
+  .sources {
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    max-width: none;
+  }
+  .sources a { border-bottom: none; word-break: break-all; }
+  .sources .src-label {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 600; font-size: 11.5px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  footer.honesty {
+    margin-top: 56px;
+    border-top: 2px solid var(--ink-strong);
+    padding-top: 20px;
+  }
+  footer.honesty h2 { font-size: 24px; }
+  .focus-note { outline: none; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (max-width: 560px) {
+    body { font-size: 14.5px; }
+    .sec-head { flex-direction: column; gap: 2px; }
+  }
+</style>
+
+<div class="sheet">
+<header class="masthead">
+  <div class="eyebrow">Competitive Intelligence · Solana MEV · Confidential</div>
+  <h1>The MRiY Dossier</h1>
+  <div class="masthead-meta">
+    <span><b>Compiled</b> 2026-08-25</span>
+    <span><b>Scope</b> adversary anatomy · auction meta · latency · spread reality</span>
+    <span><b>For</b> V41 deployment decisions</span>
+  </div>
+</header>
+
+<div class="verdicts">
+  <div class="verdict">
+    <div class="v-track">Adversary</div>
+    <div class="v-num">48,500 <small>tx/day</small></div>
+    <div class="v-text">MRiY is publicly documented, runs on private validator lanes — but its router recipe is open-source and copyable.</div>
+  </div>
+  <div class="verdict">
+    <div class="v-track">Auction</div>
+    <div class="v-num">p95 = 88k <small>lamports</small></div>
+    <div class="v-text">Today's landed-tip market deflated ~10×. Our bids were never the reason bundles failed to land.</div>
+  </div>
+  <div class="verdict">
+    <div class="v-track">Latency</div>
+    <div class="v-num">&lt;1 ms <small>to block engine</small></div>
+    <div class="v-text">Frankfurt is optimal. The 15 s polling cycle — 37 slots — is our entire disadvantage, and it is fixable in days.</div>
+  </div>
+  <div class="verdict">
+    <div class="v-track">Spreads</div>
+    <div class="v-num">$1.58 <small>avg arb</small></div>
+    <div class="v-text">Network-wide mean profit before tips. Our 96% phantom rate is the market, not a scanner bug.</div>
+  </div>
+</div>
+
+<!-- ══════════════ PART I ══════════════ -->
+<section>
+  <div class="sec-head"><h2>The Adversary, Deconstructed</h2><span class="tag">track i · wallet forensics</span></div>
+  <p class="standfirst">Wallet <code>MRiYA4oN3158…Csa</code> is not a ghost. It is one of Solana's largest backrun bots, ranked #1 by net profit on MEV.live ($49.17K net over its indexed window), and its edge stack separates into five layers — two of which we can simply take.</p>
+
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Edge layer</th><th>Evidence</th><th>Can we copy it?</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Private inclusion lanes</strong></td>
+        <td>Helius &amp; Kiln validators ran private lanes for this exact bot: <span class="num">84%</span> / <span class="num">80%</span> inclusion at zero priority fee vs ~25% baseline (analyst 8bit0, covered by SolanaFloor).<span class="sub">Anza's Constellation / Yellowstone Shield may curb this — regime risk cuts both ways.</span></td>
+        <td><span class="chip no">No</span></td>
+      </tr>
+      <tr>
+        <td><strong>no_std custom router</strong></td>
+        <td>Program <code>AN225ksocfZ…</code>, deployed 2026-08-23, 435 KB ELF. Embedded strings leak its source tree — an evolved fork of the MIT-licensed crate <a href="https://github.com/1000xsh/swaps">swaps</a> (25 DEX adapters, allocation-free, stack-backed) plus <code>solana-nostd-entrypoint</code> (~8k CU saved vs standard entrypoint).</td>
+        <td><span class="chip copy">Yes — recipe is public</span></td>
+      </tr>
+      <tr>
+        <td><strong>Shredstream-class feed</strong></td>
+        <td>Sub-10 ms reaction. Jito ShredStream closes to new entrants and shuts down 2026-09-05; successor DoubleZero Edge Frankfurt seat ≈ 100 USDC/epoch ≈ $1,000–1,500/mo.</td>
+        <td><span class="chip partial">Paywalled</span></td>
+      </tr>
+      <tr>
+        <td><strong>Venue breadth</strong></td>
+        <td>19 of 19 sampled txs hit Meteora DLMM ↔ Pump AMM; also farms long-tail PMMs retail aggregators index late: HumidiFi, Fusion, Tessera V, Token Mill v2, Bizonfi, Byreal.<span class="sub">arXiv bot census: PropAMM-routed bots profitable 62.3% vs 21% for everyone else.</span></td>
+        <td><span class="chip partial">Partially — via swaps crate</span></td>
+      </tr>
+      <tr>
+        <td><strong>Volume economics</strong></td>
+        <td>≈48,500 tx/day pace, 64–67% failure rate, durable nonce per tx, wins sometimes netting just 290k lamports gross against 172k fees. Tiny margins × brutal frequency; failures cost nearly nothing.</td>
+        <td><span class="chip copy">Philosophy — yes</span></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout good-news">
+    <h4>The load-bearing discovery</h4>
+    <p>The moat we assumed was proprietary engineering turns out to be an <strong>MIT crate anyone can build on</strong>: <a href="https://github.com/1000xsh/swaps">github.com/1000xsh/swaps</a>. Direct AMM instruction building — no Jupiter HTTP round-trip in the hot path, exactly MRiY's technique — is weeks of work, not a research project. They still pay Jito tips on non-lane leaders, so the ordinary auction is where we meet them.</p>
+  </div>
+
+  <div class="sources"><span class="src-label">Sources —</span>
+    <a href="https://www.mev.live/">MEV.live rankings</a> · <a href="https://x.com/eightbitsim/status/2074490803234406832">8bit0 lane analysis</a> · <a href="https://solanafloor.com/news/ecosystem-leaders-push-back-on-criticism-over-private-inclusion-lanes">SolanaFloor coverage</a> · <a href="https://github.com/1000xsh/swaps">1000xsh/swaps</a> · <a href="https://crates.io/crates/swaps">crates.io/swaps</a> · <a href="https://github.com/cavemanloverboy/solana-nostd-entrypoint">solana-nostd-entrypoint</a> · live RPC queries slot 441198249+, 2026-08-25
+  </div>
+</section>
+
+<!-- ══════════════ PART II ══════════════ -->
+<section>
+  <div class="sec-head"><h2>Auction Reality</h2><span class="tag">track ii · jito meta</span></div>
+  <p class="standfirst">Live tip-floor percentiles fetched from Jito's own API on 2026-08-25. The market has collapsed roughly an order of magnitude from its 2024–early-2025 congestion era.</p>
+
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Landed-bundle percentile</th><th class="num">Tip today (lamports)</th><th class="num">Old docs' example</th></tr></thead>
+    <tbody>
+      <tr><td>Median (p50)</td><td class="num">~4,100</td><td class="num">10,000</td></tr>
+      <tr><td>p75</td><td class="num">10,396</td><td class="num">~36,000</td></tr>
+      <tr><td>p95</td><td class="num">88,311</td><td class="num">1,450,000</td></tr>
+      <tr><td>p99</td><td class="num">221,716</td><td class="num">10,000,000</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout correct">
+    <h4>Correction to our own earlier reasoning</h4>
+    <p>At our minimum confirmed profit of 120k lamports, the V41 formula bids ~72k — already <strong>above yesterday's network-wide p95</strong>. The 1.5M ceiling is ~7× p99. Conclusion: <strong>tips were never why our 146 historical bundles failed to land</strong>; delivery timing and process freezes were. Overbidding costs nothing when reverted — it only leaves retention on the table when we win.</p>
+  </div>
+
+  <div class="prose">
+    <h3>Mechanics that actually decide winners</h3>
+    <ul class="filters">
+      <li>Auctions run as parallel local auctions grouped by account write-lock, at 50 ms ticks, ranked by <strong>tip ÷ requested CU</strong> — fat compute requests lower rank and will cost extra once SIMD-0553 resource-fee gates activate in Agave 4.3.</li>
+      <li>Rate limits are per region (default ~1 req/s/IP/region): firing the same bundle at Amsterdam + Frankfurt + Dublin simultaneously multiplies attempts; losers expire harmlessly.</li>
+      <li><code>getInflightBundleStatuses</code> diagnoses every failure for free: <code>Invalid</code> = construction bug, pending-until-expiry = missed leader window, <code>Failed</code> = lost auction.</li>
+      <li>Embed the tip transfer inside the arb transaction itself; randomize across the 8 tip accounts.</li>
+      <li><a href="https://docs.harmonic.gg/searchers/harmonic-bundles">Harmonic</a> accepts Jito-compatible bundles and takes no 5% cut — but permanently bans consistently-reverting submitters, so our simulation gate must stay strict.</li>
+    </ul>
+    <h3>Two clocks to watch</h3>
+    <ul class="filters">
+      <li><strong>2026-09-05</strong> — Jito ShredStream full shutdown; sub-10 ms tier moves to DoubleZero Edge fiber seats.</li>
+      <li><strong>Agave 4.3 / SIMD-0553</strong> — governance voting through ~epoch 1023 (Aug 27, 2026): flat 2,500-lamport inclusion fee plus a 100%-burned resource fee on <em>requested</em> CUs, ramping to 0.5 lamports/CU. Tight CU budgets become money.</li>
+    </ul>
+  </div>
+
+  <div class="sources"><span class="src-label">Sources —</span>
+    <a href="https://bundles.jito.wtf/api/v1/bundles/tip_floor">tip_floor API (live)</a> · <a href="https://docs.jito.wtf/lowlatencytxnsend/">Jito docs</a> · <a href="https://blog.syndica.io/deep-dive-solana-onchain-activity-october-2025/">Syndica Oct 2025</a> · <a href="https://www.galaxy.com/insights/research/solana-q4-2025-etfs-perps-prediction-markets-internet-capital-markets">Galaxy Q4 2025</a> · <a href="https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0553-resource-fee-burn.md">SIMD-0553</a> · <a href="https://bam.dev/docs/bam/bam-overview/">BAM overview</a> · <a href="https://rpcfast.com/blog/how-to-improve-your-jito-bundle-landing-rate-on-solana">RPC Fast landing guide</a> · <a href="https://github.com/JakubJaksik/solana-sender-analysis">sender-analysis benchmark</a>
+  </div>
+</section>
+
+<!-- ══════════════ PART III ══════════════ -->
+<section>
+  <div class="sec-head"><h2>Reaction Time</h2><span class="tag">track iii · latency architecture</span></div>
+  <p class="standfirst">Frankfurt holds ~19–21% of all staked SOL and our round-trip to <code>frankfurt.mainnet.block-engine.jito.wtf</code> measures under one millisecond. Geography was never the problem. Our scanner polls every ~15 seconds — structurally 37 slots behind before any thinking starts.</p>
+
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Feed tier</th><th class="num">Edge-to-client</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>DoubleZero Edge raw shreds</td><td class="num">single-digit ms</td><td>$1,000–1,500/mo Frankfurt seat — MRiY's tier after Sept 5</td></tr>
+      <tr><td>Jito ShredStream</td><td class="num">~7 ms ahead of gRPC</td><td>Closed to new entrants; dies 2026-09-05</td></tr>
+      <tr><td>LaserStream shred-delivery mode</td><td class="num">processed −8 ms</td><td>Already inside Helius plans we could enable</td></tr>
+      <tr><td><strong>LaserStream gRPC ← we pay for this now</strong></td><td class="num">p50 50–120 ms</td><td>Used only for pool-watching — not as execution trigger</td></tr>
+      <tr><td>RPC websockets</td><td class="num">Geyser-tier or worse</td><td>+ JS parse overhead</td></tr>
+      <tr><td>REST polling ← our current path</td><td class="num">+15,000 ms cycle</td><td>Jupiter lite-api + DexScreener in the hot path</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout good-news">
+    <h4>The honest reachable market</h4>
+    <p>With event-driven triggers on feeds we already pay for, detect-to-submit lands around <strong>15–50 ms</strong>. Worthwhile cross-DEX spreads average <strong>0.2–0.5% lasting 3–15 s</strong>; the Jito relayer's 200 ms speed-bump is a structural window. A 15–50 ms reactor harvests everything persisting &gt;200 ms and concedes only the sub-100 ms races — which are MRiY's paywalled world anyway.</p>
+  </div>
+
+  <p class="prose">Open-source templates exist for exactly this wiring — <a href="https://github.com/AV1080p/Solana-Arbitrage-Bot">AV1080p/Solana-Arbitrage-Bot</a> (Yellowstone-driven, hand-built pool cache) and <a href="https://github.com/jito-labs/shredstream-proxy">jito-labs/shredstream-proxy</a>'s deshred example. Common pattern: pool delta arrives → recompute reserves locally → simulate route in memory → submit bundle, zero REST calls. One hardware note: the t3.small's burstable CPU credits are our weakest link once event-driven — a fixed-performance instance (~$30–120/mo) is a cheap tail-latency win.</p>
+
+  <div class="sources"><span class="src-label">Sources —</span>
+    <a href="https://www.helius.dev/docs/laserstream">Helius LaserStream docs</a> · <a href="https://doublezero.xyz/dz-edge">DoubleZero Edge</a> · <a href="https://www.helius.dev/blog/solana-ecosystem-report-h1-2025">Helius ecosystem report H1 2025</a> · <a href="https://www.arct.cloud/blog/sub-millisecond-jito-latency-arct-cloud-solana-mev-hosting">Arct RTT bench</a> · <a href="https://github.com/dysnix/solana-test/tree/main/geyser-vs-shredstream">Dysnix shred-vs-gRPC bench</a> · <a href="https://www.helius.dev/pricing">Helius pricing</a>
+  </div>
+</section>
+
+<!-- ══════════════ PART IV ══════════════ -->
+<section>
+  <div class="sec-head"><h2>The Spread Truth</h2><span class="tag">track iv · empirical reality</span></div>
+  <p class="standfirst">The baseline numbers every expectation should be anchored to: 90.4 million successful arbitrages analyzed by Helius averaged <strong>$1.58 each before tips</strong>; Chorus One found atomic-arb opportunities in 51.6% of slots worth a median of <span class="num">$0.001–$0.009</span>; even Paladin — a bot integrated into validators — captured only 15.84% of the value available to it.</p>
+
+  <div class="prose">
+    <h3>Why spreads lie to scanners like ours</h3>
+    <ul class="filters">
+      <li><strong>Top-of-book ≠ fill.</strong> Jupiter's own engineering post shows liquidity turning over within a single block — quotes and executions answer different questions.</li>
+      <li><strong>&gt;5% spreads are almost always phantoms</strong> — dead liquidity, stale indexing, or impersonation mismatches. Our +7%/+10% sightings sit exactly there.</li>
+      <li><strong>Virtual liquidity lies:</strong> CLMM depth can overstate real reserves ~23×; documented case of $49M virtual vs $2.1M actual.</li>
+      <li><strong>Risk premia masquerade as spreads:</strong> freeze authority, mint authority, Token-2022 transfer fees — one token quoted $0.002 while effectively costing $1.30.</li>
+      <li><strong>PropAMMs reprice the reference:</strong> HumidiFi/SolFi/Tessera hold &gt;80% of SOL-stablecoin flow and quote CEX-tight spreads; everything passive looks permanently "dislocated" against them.</li>
+    </ul>
+
+    <h3>Scanner filters that kill phantoms before they cost quote calls</h3>
+    <ul class="filters">
+      <li>Simulate the actual 0.15 SOL size through each pool's swap math with both legs' fees — never vault ratios or mid-prices.</li>
+      <li>Sanity band: reject &gt;~5% (phantom) and &lt;~1% (below our cost floor).</li>
+      <li>Depth gates: both pools' withdrawable liquidity ≥ 50–100× trade size; reject venue asymmetry &gt;50× (impersonation signature).</li>
+      <li>Real SPL account balances only, not virtual liquidity; exclude Token-2022 transfer-fee mints unless modeled.</li>
+      <li>Safety screen: mint + freeze authorities revoked, present on Jupiter's strict list. If Jupiter won't route it, the spread is a honeypot quote.</li>
+      <li>Freshness gate: discard candidates computed from state &gt;1 slot old.</li>
+      <li>Treat live Jupiter quotes as a lower bound, not truth; suspect PropAMM-containing routes.</li>
+      <li>Per-candidate EV accounting: P(land) × (edge − tip − fees) − P(fail) × failure cost. Track realized landing rate per route — that number is the business metric, not scanner spread.</li>
+    </ul>
+
+    <h3>What remains monetizable at our size</h3>
+    <ul class="filters">
+      <li><strong>Volatility-event windows</strong> — launches, listings, sudden SOL moves — accepting low landing rates against better-piped snipers.</li>
+      <li><strong>Neglected long-tail pairs</strong> that pass the safety screen — understanding their persistence usually <em>is</em> the risk premium.</li>
+      <li>Not much else. Triangular SOL→Token→USDC→SOL exists on-chain (cyclic arb grew to 40%+ of aggregator volume, closing in 400–800 ms) but every documented retail attempt loses small amounts; the USDC leg belongs to PropAMMs, where our edge is thinnest.</li>
+    </ul>
+  </div>
+
+  <div class="sources"><span class="src-label">Sources —</span>
+    <a href="https://www.helius.dev/blog/solana-mev-report">Helius MEV report</a> · <a href="https://chorus.one/reports-research/paladins-quest-for-fair-mev">Chorus One / Paladin</a> · <a href="https://arxiv.org/abs/2607.28424">Demystifying Solana Bots (arXiv)</a> · <a href="https://developers.jup.ag/blog/why-you-dont-get-what-you-were-quoted">Jupiter quote-vs-execution</a> · <a href="https://zachrwong.info/writing/solana-mev-exploration-one/">Zach Wong data exploration</a> · <a href="https://blog.rfditservices.com/2025/06/20/solana-arbitrage-what-i-learned-from-400-trades-and-4-in-losses/">400-trade postmortem</a> · <a href="https://eigenphi.substack.com/p/solanas-triangular-arbitrage-explored">EigenPhi triangle case</a> · <a href="https://www.gate.com/research/article/gate-research-prop-amm-revamp-solana-liquidity">Gate PropAMM research</a>
+  </div>
+</section>
+
+<!-- ══════════════ ROADMAP ══════════════ -->
+<section>
+  <div class="sec-head"><h2>The Roadmap</h2><span class="tag">synthesis · priority order</span></div>
+  <p class="standfirst">Everything above collapses into nine moves, ordered by impact-per-effort. Items 1–4 are days-or-less and use infrastructure we already pay for.</p>
+
+  <ol class="roadmap">
+    <li>
+      <h4>Event-driven execution triggers from LaserStream</h4>
+      <p>Wire pool-delta callbacks straight into opportunity evaluation and bundle submission. Removes the 15,000 ms structural poll delay using a feed we already fund.</p>
+      <div class="chips"><span class="chip effort">days</span><span class="chip impact">decisive</span></div>
+    </li>
+    <li>
+      <h4>Multi-region bundle submission + status logging</h4>
+      <p>Fire identical bundles at amsterdam/frankfurt/dublin endpoints; log <code>getInflightBundleStatuses</code> outcomes so every non-landing gets a cause code instead of a shrug.</p>
+      <div class="chips"><span class="chip effort">hours</span><span class="chip impact">high</span></div>
+    </li>
+    <li>
+      <h4>Dynamic tip floor replacing static clamp</h4>
+      <p>Read the free tip_floor endpoint: floor ≈ max(2k, ~p75 live), ceiling ≈ p99 live with headroom for contested accounts. Today's regime pays less than 25k on most routes while matching competitiveness.</p>
+      <div class="chips"><span class="chip effort">hours</span><span class="chip impact">retention</span></div>
+    </li>
+    <li>
+      <h4>CU budget tightening</h4>
+      <p>Auctions rank by tip÷CU and SIMD-0553 will burn lamports per requested CU. Measure actual consumption; set limits tight.</p>
+      <div class="chips"><span class="chip effort">hours</span><span class="chip impact">future-proofs</span></div>
+    </li>
+    <li>
+      <h4>Scanner filter hardening (the eight filters above)</h4>
+      <p>Stop spending quote round-trips and attention on phantom spreads; concentrate the confirmed-profit gate where it can actually pass something.</p>
+      <div class="chips"><span class="chip effort">days</span><span class="chip impact">high</span></div>
+    </li>
+    <li>
+      <h4>Direct instruction building via the swaps crate</h4>
+      <p>Integrate MIT-licensed <a href="https://github.com/1000xsh/swaps">1000xsh/swaps</a> + no_std entrypoint patterns. Evicts Jupiter REST from the hot path entirely — MRiY's core technique, legally free.</p>
+      <div class="chips"><span class="chip effort">weeks</span><span class="chip impact">moat-level</span></div>
+    </li>
+    <li>
+      <h4>Fixed-performance instance</h4>
+      <p>t3.small → c7g/m7i class (~$30–120/mo). Eliminates CPU-credit jitter on the now-event-driven path.</p>
+      <div class="chips"><span class="chip effort">purchase decision</span><span class="chip impact">tail latency</span></div>
+    </li>
+    <li>
+      <h4>Harmonic as second block engine</h4>
+      <p>Jito-compatible protocol, no 5% cut. Keep the simulation gate strict — they ban consistent reverters outright.</p>
+      <div class="chips"><span class="chip effort">hours-medium</span><span class="chip impact">redundancy</span></div>
+    </li>
+    <li>
+      <h4>Safety screens + long-tail venue onboarding</h4>
+      <p>Freeze/mint-authority checks, Jupiter strict-list membership, Token-2022 detection — then add one exotic venue at a time via swaps-crate adapters. Each integrated venue is a private route.</p>
+      <div class="chips"><span class="chip effort">ongoing</span><span class="chip impact">compounds</span></div>
+    </li>
+  </ol>
+</section>
+
+<footer class="honesty">
+  <div class="sec-head"><h2>Honest Expectations</h2></div>
+  <p class="prose">Executed perfectly, items 1–5 make us a competent harvester of multi-second windows and uncontested long-tail routes at 0.15 SOL size — realistically a pennies-to-low-dollars-per-day game until bankroll grows past the 0.248 SOL reserve-floor ceiling. The two things that separate $49K-quarter operators from everyone else are private validator lanes (regime-dependent, possibly temporary) and PropAMM flow access (structural). We can't have either yet. What we <em>can</em> have — event-driven reactions, direct routing, disciplined tips, honest filters — is exactly what the 21%-profitable cohort lacks, and it costs almost nothing but engineering time. Every number on this page carries its date; the tip market alone moved 10× in eighteen months, so re-check the floors before trusting any static setting.</p>
+</footer>
+
+</div>

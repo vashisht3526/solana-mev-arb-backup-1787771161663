@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::types::{ArbitrageOpportunity, ComputeBudgetConfig, EphemeralAtaLifecycle};
 use serde::{Deserialize, Serialize};
 
@@ -23,8 +24,8 @@ pub struct AtomicBundlePlan {
     pub compute_budget: ComputeBudgetConfig,
     pub ephemeral_ata: EphemeralAtaLifecycle,
     pub instructions: Vec<String>,
-    pub min_required_out_sol: f64,
-    pub jito_tip_sol: f64,
+    pub expected_profit_sol: f64,
+    pub jito_tip_lamports: u64,
 }
 
 pub struct AtomicRouterEngine;
@@ -32,59 +33,46 @@ pub struct AtomicRouterEngine;
 impl AtomicRouterEngine {
     /// Selects optimal Compute Budget dynamically based on pool types and Ephemeral ATA overhead
     pub fn select_compute_budget(dex_a: &str, dex_b: &str) -> ComputeBudgetConfig {
-        let is_dlmm_or_clmm = dex_a.contains("METEORA")
-            || dex_a.contains("CLMM")
-            || dex_a.contains("ORCA")
+        let is_complex = dex_a.contains("METEORA")
             || dex_b.contains("METEORA")
-            || dex_b.contains("CLMM")
-            || dex_b.contains("ORCA");
+            || dex_a.contains("ORCA")
+            || dex_b.contains("ORCA")
+            || dex_a.contains("CLMM")
+            || dex_b.contains("CLMM");
 
-        if is_dlmm_or_clmm {
-            // 180k CUs ensures DLMM multi-bin traversals + ATA Create + ATA Close never abort
+        if is_complex {
             ComputeBudgetConfig::EPHEMERAL_COMPLEX
         } else {
-            // 125k CUs for standard CPMM + ATA Create + ATA Close
             ComputeBudgetConfig::EPHEMERAL_STANDARD
         }
     }
 
-    /// Assembles full 6-step Same-Transaction Ephemeral ATA Atomic Bundle
+    /// Assembles an optimized Atomic Bundle Plan for an identified circular arbitrage opportunity
     pub fn build_atomic_bundle(
         opp: &ArbitrageOpportunity,
         wallet_pubkey: &str,
-        ephemeral_ata_address: &str,
     ) -> AtomicBundlePlan {
-        let compute_budget = Self::select_compute_budget(&opp.target_dex, &opp.target_dex);
+        let compute_budget = Self::select_compute_budget(&opp.target_dex, "PUMPSWAP");
+        let ephemeral_ata = EphemeralAtaLifecycle::new(&opp.mint, wallet_pubkey);
 
-        let lifecycle = EphemeralAtaLifecycle::new(&opp.mint, ephemeral_ata_address);
-
-        // 6-step atomic lifecycle sequence:
-        // 1. SetComputeUnitLimit(180,000 / 125,000)
-        // 2. SetComputeUnitPrice(5,000 micro-lamports)
-        // 3. create_associated_token_account_idempotent (Borrows 0.00204 SOL rent for 1ms)
-        // 4. Swap Leg 1: SOL -> Token into Ephemeral ATA
-        // 5. Swap Leg 2: Token in Ephemeral ATA -> SOL back to Wallet
-        // 6. close_account: Ephemeral ATA -> 0.00204 SOL rent refund directly to Wallet
-        // 7. Atomic Profit Check: require!(final_sol >= input_sol + min_net_profit)
-        let instructions = vec![
-            format!("SetComputeUnitLimit({})", compute_budget.cu_limit),
-            format!("SetComputeUnitPrice({})", compute_budget.cu_price_micro_lamports),
-            format!("CreateIdempotentATA(payer={}, owner={}, mint={})", wallet_pubkey, wallet_pubkey, opp.mint),
-            format!("SwapLeg1(Dex={}, In={:.4} SOL, Out=Token)", "PUMPSWAP", opp.simulated_swap_sol),
-            format!("SwapLeg2(Dex={}, In=Token, Out=SOL)", opp.target_dex),
-            format!("CloseAccount(ATA={}, RefundDestination={})", ephemeral_ata_address, wallet_pubkey),
-            format!("RequireProfit(MinOut={:.5} SOL)", opp.simulated_swap_sol + opp.net_profit_sol * 0.95),
-        ];
-
-        // 25% Jito tip clamping [0.00005, 0.01000 SOL]
-        let dynamic_tip = (opp.net_profit_sol * 0.25).clamp(0.00005, 0.01000);
+        let dynamic_tip_lamports = ((opp.net_profit_sol * 1_000_000_000.0) * 0.25)
+            .max(100_000.0)
+            .min(10_000_000.0) as u64;
 
         AtomicBundlePlan {
             compute_budget,
-            ephemeral_ata: lifecycle,
-            instructions,
-            min_required_out_sol: opp.simulated_swap_sol + (opp.net_profit_sol * 0.95),
-            jito_tip_sol: dynamic_tip,
+            ephemeral_ata,
+            instructions: vec![
+                format!("SET_CU_LIMIT_{}", compute_budget.cu_limit),
+                format!("SET_CU_PRICE_{}", compute_budget.cu_price_micro_lamports),
+                format!("CREATE_EPHEMERAL_ATA_{}", opp.mint),
+                format!("SWAP_LEG1_{}_IN_OUT", opp.target_dex),
+                format!("SWAP_LEG2_PUMPSWAP_IN_OUT"),
+                format!("JITO_TIP_TRANSFER_{}", dynamic_tip_lamports),
+                format!("CLOSE_EPHEMERAL_ATA_{}_RECLAIM_RENT", opp.mint),
+            ],
+            expected_profit_sol: opp.net_profit_sol,
+            jito_tip_lamports: dynamic_tip_lamports,
         }
     }
 }

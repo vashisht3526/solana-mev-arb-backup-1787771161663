@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solana Live Multi-DEX Arbitrage & Real Trading Terminal</title>
+    <title>Solana Decoupled MEV Terminal: Dual-Leg & Triangular Engines</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -39,6 +39,7 @@
         }
         .glow-green { box-shadow: 0 0 15px rgba(20, 241, 149, 0.2); }
         .glow-red { box-shadow: 0 0 15px rgba(244, 63, 94, 0.3); }
+        .glow-blue { box-shadow: 0 0 15px rgba(56, 189, 248, 0.25); }
         .pulse-live { animation: pulse 1.5s infinite; }
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
@@ -60,10 +61,10 @@
             </div>
             <div>
                 <h1 class="text-base md:text-lg font-bold tracking-wider flex items-center gap-2">
-                    SOLANA MEV ARBITRAGE & LIVE CONTROL CENTER
-                    <span class="text-[10px] px-2 py-0.5 rounded bg-solanaPurple/20 text-solanaPurple border border-solanaPurple/30 font-bold">Mainnet Ready</span>
+                    SOLANA DECOUPLED MEV ARBITRAGE TERMINAL
+                    <span class="text-[10px] px-2 py-0.5 rounded bg-solanaPurple/20 text-solanaPurple border border-solanaPurple/30 font-bold">Mainnet Live</span>
                 </h1>
-                <p class="text-[11px] text-gray-400">Raydium ⚡ Meteora DLMM ⚡ PumpSwap ⚡ Orca Whirlpools (Frankfurt Jito)</p>
+                <p class="text-[11px] text-gray-400">Raydium CPMM ⚡ Meteora DLMM ⚡ PumpSwap ⚡ Orca Whirlpools (Frankfurt Jito)</p>
             </div>
         </div>
 
@@ -72,7 +73,7 @@
             <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-950/40 border border-yellow-500/30">
                 <i data-lucide="coins" class="w-3.5 h-3.5 text-yellow-400"></i>
                 <span class="text-gray-400">SOL:</span>
-                <span id="sol-price" class="font-bold text-yellow-400">$88.50</span>
+                <span id="sol-price" class="font-bold text-yellow-400">$93.50</span>
             </div>
 
             <!-- Region Badge -->
@@ -100,32 +101,46 @@
     <!-- INSTANCE SELECTOR TABS -->
     <div class="flex flex-wrap items-center justify-between gap-3 bg-darkCard border border-darkBorder rounded-xl p-2 px-4 shadow-md">
         <div class="flex flex-wrap gap-2 text-xs font-semibold">
-            <!-- TAB 1: LIVE REAL TRADING -->
-            <button onclick="switchTab('live')" id="tab-btn-live" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-red-950/40 border border-red-500/50 text-red-400 font-bold transition shadow glow-red">
+            <!-- TAB 1: DUAL-LEG SPATIAL ENGINE -->
+            <button onclick="switchTab('dual')" id="tab-btn-dual" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-red-950/40 border border-red-500/50 text-red-400 font-bold transition shadow glow-red">
                 <i data-lucide="shield-check" class="w-4 h-4 text-red-400"></i>
-                <span>🛡️ LIVE REAL TRADING ($35 Pilot)</span>
-                <span id="badge-live-tag" class="text-[9px] bg-red-500/20 text-red-300 px-1.5 py-0.5 rounded border border-red-500/30">ONLINE 🟢</span>
+                <span>🛡️ Dual-Leg Spatial Engine</span>
+                <span id="badge-dual-tag" class="text-[9px] bg-red-500/20 text-red-300 px-1.5 py-0.5 rounded border border-red-500/30">ONLINE 🟢</span>
             </button>
 
-            <!-- TAB 2: $35 Micro Shadow -->
+            <!-- TAB 2: TRIANGULAR 3-HOP ENGINE -->
+            <button onclick="switchTab('triangular')" id="tab-btn-triangular" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-darkBg border border-darkBorder text-gray-400 hover:text-white transition">
+                <i data-lucide="triangle" class="w-4 h-4 text-solanaGreen"></i>
+                <span>🔺 Triangular 3-Hop Engine</span>
+                <span id="badge-tri-tag" class="text-[9px] bg-solanaGreen/20 text-solanaGreen px-1.5 py-0.5 rounded border border-solanaGreen/30 font-bold">Whale Moat 🛡️</span>
+            </button>
+
+            <!-- TAB 3: $35 Micro Shadow -->
             <button onclick="switchTab('micro')" id="tab-btn-micro" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-darkBg border border-darkBorder text-gray-400 hover:text-white transition">
                 <i data-lucide="flame" class="w-4 h-4 text-amber-400"></i>
                 <span>⚡ $35 Micro Shadow</span>
                 <span class="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">0.38 SOL</span>
             </button>
 
-            <!-- TAB 3: 1.0 SOL Conservative -->
+            <!-- TAB 4: 1.0 SOL Conservative -->
             <button onclick="switchTab('1sol')" id="tab-btn-1sol" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-darkBg border border-darkBorder text-gray-400 hover:text-white transition">
                 <i data-lucide="shield" class="w-4 h-4 text-neonBlue"></i>
                 <span>💎 1.0 SOL Shadow</span>
                 <span class="text-[9px] bg-sky-500/20 text-sky-400 px-1.5 py-0.5 rounded">1.0 SOL</span>
             </button>
 
-            <!-- TAB 4: 10.0 SOL Growth -->
+            <!-- TAB 5: 10.0 SOL Growth -->
             <button onclick="switchTab('10sol')" id="tab-btn-10sol" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-darkBg border border-darkBorder text-gray-400 hover:text-white transition">
                 <i data-lucide="trending-up" class="w-4 h-4 text-solanaPurple"></i>
                 <span>🚀 10.0 SOL Shadow</span>
                 <span class="text-[9px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">10.0 SOL</span>
+            </button>
+
+            <!-- TAB 6: Migration Sniper (Shadow) -->
+            <button onclick="switchTab('migration')" id="tab-btn-migration" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-darkBg border border-darkBorder text-gray-400 hover:text-white transition">
+                <i data-lucide="crosshair" class="w-4 h-4 text-emerald-400"></i>
+                <span>🎯 Migration Sniper (Shadow)</span>
+                <span class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30">0-Capital 🛡️</span>
             </button>
         </div>
 
@@ -138,74 +153,88 @@
     </div>
 
     <!-- ================================================================= -->
-    <!-- DEDICATED LIVE REAL-MONEY TRADING MODULE CONTAINER -->
+    <!-- 🛡️ TAB 1: DUAL-LEG SPATIAL ARBITRAGE TERMINAL -->
     <!-- ================================================================= -->
-    <div id="live-trading-panel" class="space-y-4">
-        <!-- 1. WALLET CONNECTION & LIVE ENGINE CONTROLS -->
+    <div id="dual-trading-panel" class="space-y-4">
+        <!-- V42 GLOBAL KILL SWITCH — halts ALL live dispatch in <250ms, no process churn -->
+        <div class="bg-darkCard border border-red-500/60 rounded-xl p-3 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 glow-red">
+            <div class="flex items-center gap-2 text-xs">
+                <i data-lucide="shield-alert" class="w-5 h-5 text-red-400"></i>
+                <div>
+                    <div class="font-bold uppercase tracking-wider text-gray-200">Global Kill Switch</div>
+                    <div class="text-[10px] text-gray-500">Halts every engine's dispatch before signing · &lt;250ms · survives restarts while engaged</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="killswitch-state-badge" class="text-[10px] px-2 py-1 rounded font-bold bg-solanaGreen/20 text-solanaGreen border border-solanaGreen/30">TRADING LIVE</span>
+                <button onclick="toggleGlobalKillswitch(true)" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-lg transition shadow">⛔ HALT ALL TRADING</button>
+                <button onclick="toggleGlobalKillswitch(false)" class="px-4 py-2 bg-emerald-600/40 hover:bg-emerald-600/60 border border-emerald-500/50 text-emerald-300 font-bold text-xs rounded-lg transition">▶ Resume</button>
+            </div>
+        </div>
+        <!-- 1. WALLET & SUPERVISOR -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <!-- WALLET CARD -->
             <div class="lg:col-span-2 bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
                             <i data-lucide="wallet" class="w-4 h-4 text-solanaGreen"></i>
-                            Live Trading Wallet Connection
+                            Dual-Leg Armed Wallet Connection
                         </span>
-                        <span id="wallet-status-badge" class="text-[10px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-                            READY TO CONNECT
+                        <span id="dual-wallet-status-badge" class="text-[10px] px-2 py-0.5 rounded bg-solanaGreen/20 text-solanaGreen border border-solanaGreen/30 font-bold">
+                            ARMED ON-CHAIN 🟢
                         </span>
                     </div>
                     <div class="flex gap-2 mb-3">
-                        <input type="text" id="input-wallet-address" placeholder="Enter Solana Public Key (e.g. 7xKX...)" class="flex-1 bg-darkBg border border-darkBorder rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-solanaGreen">
-                        <button onclick="saveConnectedWallet()" class="px-4 py-2 bg-solanaGreen/20 hover:bg-solanaGreen/30 border border-solanaGreen/50 text-solanaGreen font-bold rounded-lg text-xs transition">
-                            Connect & Save
+                        <input type="text" id="input-dual-wallet" value="AA1ihbehbPrMW4L9jWtdxJfkH76Up5F2azbeepQ1wixs" readonly class="flex-1 bg-darkBg border border-darkBorder rounded-lg px-3 py-2 text-xs text-white">
+                        <button onclick="saveDualWallet()" class="px-4 py-2 bg-solanaGreen/20 hover:bg-solanaGreen/30 border border-solanaGreen/50 text-solanaGreen font-bold rounded-lg text-xs transition">
+                            Verify Balance
                         </button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs bg-darkBg/60 p-3 rounded-lg border border-darkBorder">
                     <div>
-                        <span class="text-gray-500 text-[10px]">ON-CHAIN BALANCE</span>
-                        <div id="live-wallet-bal" class="font-bold text-white text-sm">0.3800 SOL</div>
+                        <span class="text-gray-500 text-[10px]">LIQUID ON-CHAIN SOL</span>
+                        <div id="dual-wallet-bal" class="font-bold text-white text-sm">0.3981 SOL</div>
                     </div>
                     <div>
                         <span class="text-gray-500 text-[10px]">USD VALUE</span>
-                        <div id="live-wallet-usd" class="font-bold text-yellow-400 text-sm">$33.63</div>
+                        <div id="dual-wallet-usd" class="font-bold text-yellow-400 text-sm">$37.22</div>
                     </div>
                     <div>
-                        <span class="text-gray-500 text-[10px]">GAS RESERVE FLOOR</span>
-                        <div class="font-bold text-emerald-400 text-sm">0.1000 SOL 🛡️</div>
+                        <span class="text-gray-500 text-[10px]">UNTOUCHABLE FLOOR</span>
+                        <div id="dual-floor-display" class="font-bold text-emerald-400 text-sm">0.1500 SOL 🛡️</div>
                     </div>
                     <div>
-                        <span class="text-gray-500 text-[10px]">MAX RISK PER TRADE</span>
-                        <div id="live-max-risk" class="font-bold text-sky-400 text-sm">0.0800 SOL (21%)</div>
+                        <span class="text-gray-500 text-[10px]">MAX RISK PER 2-LEG ARB</span>
+                        <div id="dual-max-risk-display" class="font-bold text-sky-400 text-sm">0.0990 SOL (24.9%)</div>
                     </div>
                 </div>
             </div>
 
-            <!-- ENGINE CONTROLS -->
+            <!-- DUAL SUPERVISOR -->
             <div class="bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg flex flex-col justify-between">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5 mb-2">
-                        <i data-lucide="power" class="w-4 h-4 text-emerald-400"></i>
-                        Live Engine Supervisor
+                        <i data-lucide="power" class="w-4 h-4 text-red-400"></i>
+                        Dual-Leg Supervisor Controls
                     </span>
-                    <div id="live-engine-status-text" class="text-xs font-semibold text-gray-300 mb-3 bg-darkBg p-2 rounded border border-darkBorder">
-                        Status: <b class="text-solanaGreen">LIVE ACTIVE (Trading Real SOL)</b>
+                    <div id="dual-engine-status-text" class="text-xs font-semibold text-gray-300 mb-3 bg-darkBg p-2 rounded border border-darkBorder">
+                        Status: <b class="text-solanaGreen">DUAL-LEG CONCENTRATED (Meteora DLMM & Orca)</b>
                     </div>
                 </div>
 
                 <div class="flex flex-col gap-2">
-                    <button onclick="controlLiveEngine('start')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow">
+                    <button onclick="controlDualEngine('start')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow">
                         <i data-lucide="play" class="w-4 h-4"></i>
-                        ▶ START / RESUME LIVE TRADING
+                        ▶ START / RESUME DUAL-LEG ENGINE
                     </button>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="controlLiveEngine('stop')" class="py-2 bg-yellow-600/30 hover:bg-yellow-600/40 border border-yellow-500/50 text-yellow-300 font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1">
+                        <button onclick="controlDualEngine('stop')" class="py-2 bg-yellow-600/30 hover:bg-yellow-600/40 border border-yellow-500/50 text-yellow-300 font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1">
                             <i data-lucide="pause" class="w-3.5 h-3.5"></i>
                             ⏸ Pause
                         </button>
-                        <button onclick="controlLiveEngine('kill')" class="py-2 bg-red-600/40 hover:bg-red-600/60 border border-red-500 text-red-300 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1 glow-red">
+                        <button onclick="controlDualEngine('emergency_stop')" class="py-2 bg-red-600/40 hover:bg-red-600/60 border border-red-500 text-red-300 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1 glow-red">
                             <i data-lucide="octagon-alert" class="w-3.5 h-3.5"></i>
                             🛑 Killswitch
                         </button>
@@ -214,203 +243,131 @@
             </div>
         </div>
 
-        <!-- 2. COLLAPSIBLE PARAMETER OPTIMIZER DROPDOWN (Hidden by default) -->
-        <div class="bg-darkCard border border-darkBorder rounded-xl shadow-lg overflow-hidden">
-            <button onclick="toggleOptimizerDropdown()" class="w-full p-4 flex items-center justify-between hover:bg-darkBg/50 transition cursor-pointer text-left">
+        <!-- DUAL-LEG PARAMETER OPTIMIZER -->
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg space-y-3">
+            <div class="flex items-center justify-between">
                 <span class="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-2">
                     <i data-lucide="sliders" class="w-4 h-4 text-neonBlue"></i>
-                    ⚙️ Advanced Execution Parameters & Sizing
-                    <span class="text-[10px] text-gray-500 font-normal lowercase">(click to expand / collapse)</span>
+                    ⚙️ Dual-Leg Execution & Risk Parameters
                 </span>
-                <i id="dropdown-icon" data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition transform duration-200"></i>
-            </button>
+                <button onclick="saveDualConfig()" class="px-3 py-1 bg-neonBlue/20 hover:bg-neonBlue/30 border border-neonBlue/50 text-neonBlue text-xs font-bold rounded-lg transition">
+                    Save Dual Parameters
+                </button>
+            </div>
 
-            <div id="optimizer-dropdown-content" class="p-4 pt-0 border-t border-darkBorder hidden space-y-3">
-                <div class="flex justify-end pt-3">
-                    <button onclick="saveLiveConfig()" class="px-3 py-1 bg-neonBlue/20 hover:bg-neonBlue/30 border border-neonBlue/50 text-neonBlue text-xs font-bold rounded-lg transition">
-                        Save Parameters
-                    </button>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+                <div>
+                    <label class="text-gray-400 block mb-1">Max Position Size: <b id="val-dual-pos" class="text-white">0.145 SOL</b></label>
+                    <input type="range" id="slider-dual-pos" min="0.010" max="0.150" step="0.001" value="0.145" class="w-full accent-neonBlue" oninput="dualSliderTouched=true; document.getElementById('val-dual-pos').innerText=this.value+' SOL'">
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
-                    <!-- Sizing Slider -->
-                    <div class="bg-darkBg p-3 rounded-lg border border-darkBorder space-y-2">
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Max Trade Sizing:</span>
-                            <b id="val-pos-size" class="text-white">0.08 SOL</b>
-                        </div>
-                        <input type="range" id="range-pos-size" min="0.04" max="0.15" step="0.01" value="0.08" class="w-full accent-solanaGreen" oninput="document.getElementById('val-pos-size').innerText = parseFloat(this.value).toFixed(2) + ' SOL'">
-                        <span class="text-[10px] text-gray-500">Clamped to protect balance</span>
-                    </div>
-
-                    <!-- Spread Slider -->
-                    <div class="bg-darkBg p-3 rounded-lg border border-darkBorder space-y-2">
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Min Spread Trigger:</span>
-                            <b id="val-min-spread" class="text-solanaGreen">+0.50%</b>
-                        </div>
-                        <input type="range" id="range-min-spread" min="0.30" max="2.00" step="0.05" value="0.50" class="w-full accent-solanaGreen" oninput="document.getElementById('val-min-spread').innerText = '+' + parseFloat(this.value).toFixed(2) + '%'">
-                        <span class="text-[10px] text-gray-500">High-conviction threshold</span>
-                    </div>
-
-                    <!-- Profit Floor Slider -->
-                    <div class="bg-darkBg p-3 rounded-lg border border-darkBorder space-y-2">
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Min Net Profit Floor:</span>
-                            <b id="val-min-profit" class="text-yellow-400">0.00030 SOL</b>
-                        </div>
-                        <input type="range" id="range-min-profit" min="0.00010" max="0.00100" step="0.00005" value="0.00030" class="w-full accent-yellow-400" oninput="document.getElementById('val-min-profit').innerText = parseFloat(this.value).toFixed(5) + ' SOL'">
-                        <span class="text-[10px] text-gray-500">Required after Jito tips</span>
-                    </div>
-
-                    <!-- Jito Tip Slider -->
-                    <div class="bg-darkBg p-3 rounded-lg border border-darkBorder space-y-2">
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Jito Tip Share:</span>
-                            <b id="val-jito-tip" class="text-solanaPurple">25%</b>
-                        </div>
-                        <input type="range" id="range-jito-tip" min="15" max="40" step="1" value="25" class="w-full accent-solanaPurple" oninput="document.getElementById('val-jito-tip').innerText = this.value + '%'">
-                        <span class="text-[10px] text-gray-500">Max tip ceiling 0.010 SOL</span>
-                    </div>
+                <div>
+                    <label class="text-gray-400 block mb-1">Min Gross Spread: <b id="val-dual-spread" class="text-white">0.50%</b></label>
+                    <input type="range" id="slider-dual-spread" min="0.30" max="2.00" step="0.10" value="0.50" class="w-full accent-neonBlue" oninput="document.getElementById('val-dual-spread').innerText=this.value+'%'">
+                </div>
+                <div>
+                    <label class="text-gray-400 block mb-1">Max Slippage: <b id="val-dual-slip" class="text-white">0.50%</b></label>
+                    <input type="range" id="slider-dual-slip" min="0.20" max="1.00" step="0.05" value="0.50" class="w-full accent-neonBlue" oninput="document.getElementById('val-dual-slip').innerText=this.value+'%'">
+                </div>
+                <div>
+                    <label class="text-gray-400 block mb-1">Dynamic Jito Tip: <b id="val-dual-tip" class="text-white">35%</b></label>
+                    <input type="range" id="slider-dual-tip" min="15" max="50" step="5" value="35" class="w-full accent-neonBlue" oninput="document.getElementById('val-dual-tip').innerText=this.value+'%'">
                 </div>
             </div>
         </div>
 
-        <!-- 3. CIRCUIT BREAKER LIVE STATUS GRID -->
+        <!-- DUAL-LEG STATS & CHARTS -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-            <div class="bg-darkCard border border-darkBorder p-3 rounded-xl flex items-center gap-2.5">
-                <i data-lucide="shield-check" class="w-5 h-5 text-emerald-400"></i>
-                <div>
-                    <div class="text-gray-400 text-[10px]">RESERVE FLOOR</div>
-                    <div class="font-bold text-white">0.10 SOL Active 🟢</div>
-                </div>
+            <div class="bg-darkCard border border-darkBorder rounded-xl p-3">
+                <span class="text-gray-400 text-[10px]">TOTAL 2-LEG TRADES</span>
+                <div id="dual-stat-trades" class="font-bold text-white text-lg">0</div>
             </div>
-            <div class="bg-darkCard border border-darkBorder p-3 rounded-xl flex items-center gap-2.5">
-                <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i>
-                <div>
-                    <div class="text-gray-400 text-[10px]">MAX DRAWDOWN STOP</div>
-                    <div class="font-bold text-white">0.05 SOL Limit 🟢</div>
-                </div>
+            <div class="bg-darkCard border border-darkBorder rounded-xl p-3">
+                <span class="text-gray-400 text-[10px]">WIN RATE</span>
+                <div id="dual-stat-winrate" class="font-bold text-solanaGreen text-lg">100.0%</div>
             </div>
-            <div class="bg-darkCard border border-darkBorder p-3 rounded-xl flex items-center gap-2.5">
-                <i data-lucide="clock" class="w-5 h-5 text-emerald-400"></i>
-                <div>
-                    <div class="text-gray-400 text-[10px]">FAILURE COOLDOWN</div>
-                    <div class="font-bold text-white">3 Drops ➔ 300s 🟢</div>
-                </div>
+            <div class="bg-darkCard border border-darkBorder rounded-xl p-3">
+                <span class="text-gray-400 text-[10px]">NET PNL (SOL)</span>
+                <div id="dual-stat-pnl-sol" class="font-bold text-emerald-400 text-lg">+0.0000 SOL</div>
             </div>
-            <div class="bg-darkCard border border-darkBorder p-3 rounded-xl flex items-center gap-2.5">
-                <i data-lucide="layers" class="w-5 h-5 text-emerald-400"></i>
-                <div>
-                    <div class="text-gray-400 text-[10px]">EPHEMERAL ATAS</div>
-                    <div class="font-bold text-white">$0.00 Net Rent 🟢</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================================================================= -->
-    <!-- METRICS CARDS ROW (Current Selected Instance) -->
-    <!-- ================================================================= -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <!-- Balance Card -->
-        <div class="bg-darkCard border border-darkBorder rounded-xl p-3.5 shadow-md flex flex-col justify-between">
-            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Current Balance</span>
-            <div class="mt-1">
-                <div id="stat-balance-sol" class="text-lg md:text-xl font-bold text-white">0.3800 SOL</div>
-                <div id="stat-balance-usd" class="text-xs text-yellow-400 font-semibold">$33.63 USD</div>
+            <div class="bg-darkCard border border-darkBorder rounded-xl p-3">
+                <span class="text-gray-400 text-[10px]">NET PNL (USD)</span>
+                <div id="dual-stat-pnl-usd" class="font-bold text-yellow-400 text-lg">+$0.00</div>
             </div>
         </div>
 
-        <!-- Net PnL Card -->
-        <div class="bg-darkCard border border-darkBorder rounded-xl p-3.5 shadow-md flex flex-col justify-between">
-            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Net Profit</span>
-            <div class="mt-1">
-                <div id="stat-pnl-sol" class="text-lg md:text-xl font-bold text-solanaGreen">+0.0000 SOL</div>
-                <div id="stat-pnl-usd" class="text-xs text-solanaGreen font-semibold">+$0.00 USD</div>
-            </div>
-        </div>
-
-        <!-- Win Rate Card -->
-        <div class="bg-darkCard border border-darkBorder rounded-xl p-3.5 shadow-md flex flex-col justify-between">
-            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Win Rate</span>
-            <div class="mt-1">
-                <div id="stat-win-rate" class="text-lg md:text-xl font-bold text-neonBlue">0.0%</div>
-                <div id="stat-trade-counts" class="text-[11px] text-gray-400">0 W / 0 F</div>
-            </div>
-        </div>
-
-        <!-- Total Trades Card -->
-        <div class="bg-darkCard border border-darkBorder rounded-xl p-3.5 shadow-md flex flex-col justify-between">
-            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Trades</span>
-            <div class="mt-1">
-                <div id="stat-total-trades" class="text-lg md:text-xl font-bold text-white">0</div>
-                <div class="text-[11px] text-gray-400">Executed</div>
-            </div>
-        </div>
-
-        <!-- Active Pools Tracked -->
-        <div class="bg-darkCard border border-darkBorder rounded-xl p-3.5 shadow-md flex flex-col justify-between">
-            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Meme Pools Scanned</span>
-            <div class="mt-1">
-                <div id="stat-pools-tracked" class="text-lg md:text-xl font-bold text-solanaPurple">0</div>
-                <div class="text-[11px] text-gray-400">Real-Time</div>
-            </div>
-        </div>
-
-        <!-- Security Shields -->
-        <div class="bg-darkCard border border-darkBorder rounded-xl p-3.5 shadow-md flex flex-col justify-between">
-            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Security Shields</span>
-            <div class="mt-1">
-                <div class="text-sm font-bold text-solanaGreen">4-Pillar Active</div>
-                <div class="text-[10px] text-gray-400">Ephemeral ATAs</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================================================================= -->
-    <!-- MAIN CHARTS & REAL-TIME TABLES -->
-    <!-- ================================================================= -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <!-- EQUITY CURVE CHART -->
-        <div class="lg:col-span-1 bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg flex flex-col">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
-                    <i data-lucide="trending-up" class="w-4 h-4 text-solanaGreen"></i>
-                    Balance Growth Curve
-                </h3>
-                <span id="chart-instance-tag" class="text-[10px] text-gray-400 font-mono">LIVE PILOT</span>
-            </div>
-            <div class="relative flex-1 min-h-[220px]">
-                <canvas id="equityChart"></canvas>
-            </div>
-        </div>
-
-        <!-- RECENT TRADES FEED TABLE -->
-        <div class="lg:col-span-2 bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg flex flex-col">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
-                    <i data-lucide="list" class="w-4 h-4 text-neonBlue"></i>
-                    Real-Time Execution Log
-                </h3>
-                <span class="text-[10px] text-gray-400">Auto-Refreshed via WebSocket</span>
-            </div>
-            <div class="overflow-x-auto flex-1 max-h-[280px]">
+        <!-- RECENT DUAL-LEG TRADES -->
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-300 mb-3 flex items-center gap-1.5">
+                <i data-lucide="list" class="w-4 h-4 text-neonBlue"></i>
+                Dual-Leg Live On-Chain Trade Log
+            </h3>
+            <div class="overflow-x-auto max-h-80 overflow-y-auto">
                 <table class="w-full text-left text-xs">
-                    <thead class="text-[10px] text-gray-400 uppercase bg-darkBg border-b border-darkBorder sticky top-0">
+                    <thead class="bg-darkBg text-gray-400 border-b border-darkBorder sticky top-0">
                         <tr>
                             <th class="p-2">Time</th>
                             <th class="p-2">Token</th>
                             <th class="p-2">Size</th>
-                            <th class="p-2">Profit (SOL)</th>
+                            <th class="p-2">Net Profit</th>
                             <th class="p-2">Jito Tip</th>
                             <th class="p-2">Status</th>
-                            <th class="p-2">Ending Bal</th>
+                            <th class="p-2">Signature</th>
                         </tr>
                     </thead>
-                    <tbody id="trades-table-body" class="divide-y divide-darkBorder font-mono">
+                    <tbody id="dual-trades-tbody" class="divide-y divide-darkBorder/50 font-mono">
                         <tr>
-                            <td colspan="7" class="p-4 text-center text-gray-500">Waiting for live trades...</td>
+                            <td colspan="7" class="p-4 text-center text-gray-500">Scanning real-time DEX liquidity pools...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 🔥 ACTIVE MULTI-DEX TRACKED TOKENS & SPREAD MONITOR (DUAL-LEG) -->
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-darkBorder pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-solanaGreen pulse-live"></div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                        <i data-lucide="radar" class="w-4 h-4 text-solanaGreen"></i>
+                        Active Tracked Tokens & Multi-DEX Spreads
+                    </h3>
+                    <span id="dual-tracked-count-badge" class="text-[10px] bg-solanaGreen/20 text-solanaGreen px-2 py-0.5 rounded-full border border-solanaGreen/30 font-bold">
+                        0 Tokens Tracked
+                    </span>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <div class="relative">
+                        <input type="text" id="dual-token-search" oninput="handleTokenSearch(this.value)" placeholder="Filter symbol / mint..." class="bg-darkBg border border-darkBorder rounded-lg px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-solanaGreen w-48 md:w-56">
+                    </div>
+                    <div class="flex items-center gap-1 px-2.5 py-1 rounded bg-darkBg border border-darkBorder text-[11px]">
+                        <span class="text-gray-400">Spread &ge; 0.5%:</span>
+                        <span id="dual-arb-ready-count" class="font-bold text-solanaGreen">0</span>
+                    </div>
+                    <div class="flex items-center gap-1 px-2.5 py-1 rounded bg-darkBg border border-darkBorder text-[11px]">
+                        <span class="text-gray-400">Top Spread:</span>
+                        <span id="dual-top-spread-badge" class="font-bold text-yellow-400">0.00%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-darkBg text-gray-400 border-b border-darkBorder sticky top-0 z-10">
+                        <tr>
+                            <th class="p-2.5">Token / Mint</th>
+                            <th class="p-2.5">Active Pools & Liquidity</th>
+                            <th class="p-2.5">Best Arbitrage Route</th>
+                            <th class="p-2.5">Live Gross Spread</th>
+                            <th class="p-2.5">5m Volume</th>
+                            <th class="p-2.5">Total Liq</th>
+                            <th class="p-2.5">Arb Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dual-tracked-tokens-tbody" class="divide-y divide-darkBorder/50 font-mono">
+                        <tr>
+                            <td colspan="7" class="p-6 text-center text-gray-500">Connecting to real-time DEX scanner matrix...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -419,285 +376,683 @@
     </div>
 
     <!-- ================================================================= -->
-    <!-- LIVE MULTI-DEX ARBITRAGE SCANNER (PUMPPORTAL / METEORA / RAYDIUM) -->
+    <!-- 🔺 TAB 2: TRIANGULAR 3-HOP ARBITRAGE TERMINAL -->
     <!-- ================================================================= -->
-    <div class="bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg">
-        <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-                <div class="w-2.5 h-2.5 rounded-full bg-solanaGreen pulse-live"></div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-white">
-                    Live Volatile Arbitrage Scanner (Raydium ⚡ Meteora ⚡ PumpSwap ⚡ Orca)
-                </h3>
+    <div id="triangular-trading-panel" class="space-y-4 hidden">
+        <!-- 1. WHALE MOAT & SUPERVISOR -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="lg:col-span-2 bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-solanaGreen"></i>
+                            Triangular Whale-Exclusion Zone ($3k–$40k TVL)
+                        </span>
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-solanaGreen/20 text-solanaGreen border border-solanaGreen/30 font-bold">
+                            WHALE MOAT ARMED 🛡️
+                        </span>
+                    </div>
+                    <div class="bg-darkBg/60 p-2.5 rounded-lg border border-darkBorder text-xs text-gray-300 mb-3">
+                        <b>Routing Policy:</b> SOL ➔ Volatile Token A ➔ USDC ➔ SOL (3-Hop Atomic Bundle with 100% In-Tx ATA Rent Refund).
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs bg-darkBg/60 p-3 rounded-lg border border-darkBorder">
+                    <div>
+                        <span class="text-gray-500 text-[10px]">ARMED BALANCE</span>
+                        <div id="tri-wallet-bal" class="font-bold text-white text-sm">0.3981 SOL</div>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 text-[10px]">USD VALUE</span>
+                        <div id="tri-wallet-usd" class="font-bold text-yellow-400 text-sm">$37.22</div>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 text-[10px]">RESERVE FLOOR</span>
+                        <div id="tri-floor-display" class="font-bold text-emerald-400 text-sm">0.1500 SOL 🛡️</div>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 text-[10px]">MAX RISK PER 3-HOP</span>
+                        <div id="tri-max-risk-display" class="font-bold text-solanaGreen text-sm">0.0990 SOL (24.9%)</div>
+                    </div>
+                </div>
             </div>
-            <span class="text-[10px] text-gray-400 font-mono">Refreshed every 3s</span>
+
+            <!-- TRIANGULAR SUPERVISOR -->
+            <div class="bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg flex flex-col justify-between">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5 mb-2">
+                        <i data-lucide="power" class="w-4 h-4 text-emerald-400"></i>
+                        Triangular Supervisor Controls
+                    </span>
+                    <div id="tri-engine-status-text" class="text-xs font-semibold text-gray-300 mb-3 bg-darkBg p-2 rounded border border-darkBorder">
+                        Status: <b class="text-solanaGreen">TRIANGULAR CONCENTRATED ($10k-$60k Goldilocks Zone)</b>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <button onclick="controlTriangularEngine('start')" class="w-full py-2.5 bg-solanaGreen hover:bg-emerald-400 text-black font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow">
+                        <i data-lucide="play" class="w-4 h-4"></i>
+                        ▶ START / RESUME TRIANGULAR ENGINE
+                    </button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="controlTriangularEngine('stop')" class="py-2 bg-yellow-600/30 hover:bg-yellow-600/40 border border-yellow-500/50 text-yellow-300 font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1">
+                            <i data-lucide="pause" class="w-3.5 h-3.5"></i>
+                            ⏸ Pause
+                        </button>
+                        <button onclick="controlTriangularEngine('emergency_stop')" class="py-2 bg-red-600/40 hover:bg-red-600/60 border border-red-500 text-red-300 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1 glow-red">
+                            <i data-lucide="octagon-alert" class="w-3.5 h-3.5"></i>
+                            🛑 Killswitch
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="overflow-x-auto max-h-[320px]">
-            <table class="w-full text-left text-xs">
-                <thead class="text-[10px] text-gray-400 uppercase bg-darkBg border-b border-darkBorder sticky top-0">
-                    <tr>
-                        <th class="p-2">Time</th>
-                        <th class="p-2">Token</th>
-                        <th class="p-2">Raydium</th>
-                        <th class="p-2">Meteora</th>
-                        <th class="p-2">PumpSwap</th>
-                        <th class="p-2">Orca</th>
-                        <th class="p-2">Spread</th>
-                        <th class="p-2">Best Route</th>
-                        <th class="p-2">5m Vol</th>
-                        <th class="p-2">Liquidity</th>
-                    </tr>
-                </thead>
-                <tbody id="scanner-table-body" class="divide-y divide-darkBorder font-mono">
-                    <tr>
-                        <td colspan="10" class="p-4 text-center text-gray-500">Scanning DEX pools across Europe...</td>
-                    </tr>
-                </tbody>
-            </table>
+
+        <!-- TRIANGULAR PARAMETER OPTIMIZER -->
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-4 h-4 text-solanaGreen"></i>
+                    ⚙️ Triangular Whale-Zone & 3-Hop Parameters
+                </span>
+                <button onclick="saveTriangularConfig()" class="px-3 py-1 bg-solanaGreen/20 hover:bg-solanaGreen/30 border border-solanaGreen/50 text-solanaGreen text-xs font-bold rounded-lg transition">
+                    Save Triangular Parameters
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+                <div>
+                    <label class="text-gray-400 block mb-1">Max Position Size: <b id="val-tri-pos" class="text-white">0.145 SOL</b></label>
+                    <input type="range" id="slider-tri-pos" min="0.010" max="0.150" step="0.001" value="0.145" class="w-full accent-solanaGreen" oninput="triSliderTouched=true; document.getElementById('val-tri-pos').innerText=this.value+' SOL'">
+                </div>
+                <div>
+                    <label class="text-gray-400 block mb-1">Whale TVL Range: <b class="text-white">$3k - $45k</b></label>
+                    <input type="range" min="3000" max="45000" step="1000" value="45000" disabled class="w-full opacity-60">
+                </div>
+                <div>
+                    <label class="text-gray-400 block mb-1">Compound Slippage: <b id="val-tri-slip" class="text-white">0.40%</b></label>
+                    <input type="range" id="slider-tri-slip" min="0.20" max="0.80" step="0.05" value="0.40" class="w-full accent-solanaGreen" oninput="document.getElementById('val-tri-slip').innerText=this.value+'%'">
+                </div>
+                <div>
+                    <label class="text-gray-400 block mb-1">Dynamic Jito Tip: <b id="val-tri-tip" class="text-white">35%</b></label>
+                    <input type="range" id="slider-tri-tip" min="20" max="50" step="5" value="35" class="w-full accent-solanaGreen" oninput="document.getElementById('val-tri-tip').innerText=this.value+'%'">
+                </div>
+            </div>
+        </div>
+
+        <!-- TRIANGULAR STATS -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div class="bg-darkCard border border-darkBorder rounded-xl p-3">
+                <span class="text-gray-400 text-[10px]">TOTAL 3-HOP TRADES</span>
+                <div id="tri-stat-trades" class="font-bold text-white text-lg">0</div>
+            </div>
+            <div class="bg-darkCard border border-darkBorder rounded-xl p-3">
+                <span class="text-gray-400 text-[10px]">WIN RATE</span>
+                <div id="tri-stat-winrate" class="font-bold text-solanaGreen text-lg">100.0%</div>
+            </div>
+            <div class="bg-darkCard border border-darkBorder rounded-xl p-3">
+                <span class="text-gray-400 text-[10px]">NET PNL (SOL)</span>
+                <div id="tri-stat-pnl-sol" class="font-bold text-emerald-400 text-lg">+0.0000 SOL</div>
+            </div>
+            <div class="bg-darkCard border border-darkBorder rounded-xl p-3">
+                <span class="text-gray-400 text-[10px]">NET PNL (USD)</span>
+                <div id="tri-stat-pnl-usd" class="font-bold text-yellow-400 text-lg">+$0.00</div>
+            </div>
+        </div>
+
+        <!-- RECENT TRIANGULAR TRADES -->
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-300 mb-3 flex items-center gap-1.5">
+                <i data-lucide="list" class="w-4 h-4 text-solanaGreen"></i>
+                Triangular 3-Hop On-Chain Trade Log
+            </h3>
+            <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-darkBg text-gray-400 border-b border-darkBorder sticky top-0">
+                        <tr>
+                            <th class="p-2">Time</th>
+                            <th class="p-2">Route</th>
+                            <th class="p-2">Size</th>
+                            <th class="p-2">Net Profit</th>
+                            <th class="p-2">Jito Tip</th>
+                            <th class="p-2">Status</th>
+                            <th class="p-2">Signature</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tri-trades-tbody" class="divide-y divide-darkBorder/50 font-mono">
+                        <tr>
+                            <td colspan="7" class="p-4 text-center text-gray-500">Scanning Whale-Exclusion Zone ($3k-$40k TVL)...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 🔥 ACTIVE MULTI-DEX TRACKED TOKENS & SPREAD MONITOR (TRIANGULAR) -->
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-darkBorder pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-solanaGreen pulse-live"></div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                        <i data-lucide="radar" class="w-4 h-4 text-solanaGreen"></i>
+                        Active Tracked Tokens & Multi-DEX Spreads
+                    </h3>
+                    <span id="tri-tracked-count-badge" class="text-[10px] bg-solanaGreen/20 text-solanaGreen px-2 py-0.5 rounded-full border border-solanaGreen/30 font-bold">
+                        0 Tokens Tracked
+                    </span>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <div class="relative">
+                        <input type="text" id="tri-token-search" oninput="handleTokenSearch(this.value)" placeholder="Filter symbol / mint..." class="bg-darkBg border border-darkBorder rounded-lg px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-solanaGreen w-48 md:w-56">
+                    </div>
+                    <div class="flex items-center gap-1 px-2.5 py-1 rounded bg-darkBg border border-darkBorder text-[11px]">
+                        <span class="text-gray-400">Spread &ge; 0.5%:</span>
+                        <span id="tri-arb-ready-count" class="font-bold text-solanaGreen">0</span>
+                    </div>
+                    <div class="flex items-center gap-1 px-2.5 py-1 rounded bg-darkBg border border-darkBorder text-[11px]">
+                        <span class="text-gray-400">Top Spread:</span>
+                        <span id="tri-top-spread-badge" class="font-bold text-yellow-400">0.00%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-darkBg text-gray-400 border-b border-darkBorder sticky top-0 z-10">
+                        <tr>
+                            <th class="p-2.5">Token / Mint</th>
+                            <th class="p-2.5">Active Pools & Liquidity</th>
+                            <th class="p-2.5">Best Arbitrage Route</th>
+                            <th class="p-2.5">Live Gross Spread</th>
+                            <th class="p-2.5">5m Volume</th>
+                            <th class="p-2.5">Total Liq</th>
+                            <th class="p-2.5">Arb Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tri-tracked-tokens-tbody" class="divide-y divide-darkBorder/50 font-mono">
+                        <tr>
+                            <td colspan="7" class="p-6 text-center text-gray-500">Connecting to real-time DEX scanner matrix...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- SCRIPTS -->
+    <!-- ================================================================= -->
+    <!-- SHADOW RUNWAY / SIMULATION PANELS -->
+    <!-- ================================================================= -->
+    <div id="shadow-panel" class="space-y-4 hidden">
+        <div class="bg-darkCard border border-darkBorder rounded-xl p-4 shadow-lg">
+            <h2 id="shadow-title" class="text-sm font-bold text-white mb-2">Shadow Simulation Engine</h2>
+            <p id="shadow-desc" class="text-xs text-gray-400 mb-4">Historical shadow runway testing high-frequency executions.</p>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-4">
+                <div class="bg-darkBg p-3 rounded-lg border border-darkBorder">
+                    <span class="text-gray-500 text-[10px]">TOTAL TRADES</span>
+                    <div id="shadow-stat-trades" class="font-bold text-white text-lg">--</div>
+                </div>
+                <div class="bg-darkBg p-3 rounded-lg border border-darkBorder">
+                    <span class="text-gray-500 text-[10px]">WIN RATE</span>
+                    <div id="shadow-stat-winrate" class="font-bold text-solanaGreen text-lg">--%</div>
+                </div>
+                <div class="bg-darkBg p-3 rounded-lg border border-darkBorder">
+                    <span class="text-gray-500 text-[10px]">NET PROFIT (SOL)</span>
+                    <div id="shadow-stat-pnl-sol" class="font-bold text-emerald-400 text-lg">-- SOL</div>
+                </div>
+                <div class="bg-darkBg p-3 rounded-lg border border-darkBorder">
+                    <span class="text-gray-500 text-[10px]">NET PROFIT (USD)</span>
+                    <div id="shadow-stat-pnl-usd" class="font-bold text-yellow-400 text-lg">$--</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         lucide.createIcons();
 
-        let currentTab = localStorage.getItem('solana_mev_active_tab') || 'live';
-        let globalStats = null;
-        let chartInstance = null;
+        let currentTab = 'dual';
+        let latestData = null;
+        let currentTrackedTokens = [];
+        let tokenFilterQuery = '';
 
-        // Initialize Chart.js
-        const ctx = document.getElementById('equityChart').getContext('2d');
-        chartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Start'],
-                datasets: [{
-                    label: 'SOL Balance',
-                    data: [0.38],
-                    borderColor: '#14f195',
-                    backgroundColor: 'rgba(20, 241, 149, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 9 } } },
-                    y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 9 } } }
-                }
-            }
-        });
+        function switchTab(tabId) {
+            currentTab = tabId;
 
-        function toggleOptimizerDropdown() {
-            const content = document.getElementById('optimizer-dropdown-content');
-            const icon = document.getElementById('dropdown-icon');
-            if (content.classList.contains('hidden')) {
-                content.classList.remove('hidden');
-                icon.classList.add('rotate-180');
-            } else {
-                content.classList.add('hidden');
-                icon.classList.remove('rotate-180');
-            }
-        }
-
-        function switchTab(tab) {
-            currentTab = tab;
-            localStorage.setItem('solana_mev_active_tab', tab);
-
-            ['live', 'micro', '1sol', '10sol'].forEach(t => {
-                const btn = document.getElementById(`tab-btn-${t}`);
-                if (t === tab) {
-                    btn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-red-950/40 border border-red-500/50 text-red-400 font-bold transition shadow glow-red';
-                } else {
+            // Reset all tab button styles
+            const allTabs = ['dual', 'triangular', 'micro', '1sol', '10sol', 'migration'];
+            allTabs.forEach(id => {
+                const btn = document.getElementById(`tab-btn-${id}`);
+                if (btn) {
                     btn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-darkBg border border-darkBorder text-gray-400 hover:text-white transition';
                 }
             });
 
-            const livePanel = document.getElementById('live-trading-panel');
-            if (tab === 'live') {
-                livePanel.style.display = 'block';
+            // Hide all panels
+            document.getElementById('dual-trading-panel').classList.add('hidden');
+            document.getElementById('triangular-trading-panel').classList.add('hidden');
+            document.getElementById('shadow-panel').classList.add('hidden');
+
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+
+            if (tabId === 'dual') {
+                if (activeBtn) activeBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-red-950/40 border border-red-500/50 text-red-400 font-bold transition shadow glow-red';
+                document.getElementById('dual-trading-panel').classList.remove('hidden');
+            } else if (tabId === 'triangular') {
+                if (activeBtn) activeBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-950/40 border border-solanaGreen/50 text-solanaGreen font-bold transition shadow glow-green';
+                document.getElementById('triangular-trading-panel').classList.remove('hidden');
             } else {
-                livePanel.style.display = 'none';
+                if (activeBtn) activeBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-sky-950/40 border border-neonBlue text-neonBlue font-bold transition shadow glow-blue';
+                document.getElementById('shadow-panel').classList.remove('hidden');
+                document.getElementById('shadow-title').innerText = `${tabId.toUpperCase()} Shadow Runway Engine`;
             }
 
-            if (globalStats) renderStats(globalStats);
+            if (latestData) updateUI(latestData);
         }
 
-        function renderStats(data) {
-            globalStats = data;
-            const solPrice = data.system?.sol_price_usd || 88.50;
-            document.getElementById('sol-price').innerText = `$${solPrice.toFixed(2)}`;
-            document.getElementById('jito-latency').innerText = `${data.system?.jito_latency_ms || 11.3} ms`;
-            document.getElementById('sys-ram').innerText = `${data.system?.ram_usage_mb || 0} MB`;
-            document.getElementById('sys-cpu').innerText = `${data.system?.cpu_usage_pct || 0}%`;
+        // WebSocket Feed — silent auto-reconnect; NEVER reloads the page.
+        // (Old behavior: location.reload() every time the socket dropped, which made
+        // the whole dashboard flash-refresh every few minutes.)
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        let ws = null;
+        let wsBackoffMs = 3000;
 
-            // Update live config status
-            if (data.live_config) {
-                const cfg = data.live_config;
-                if (cfg.wallet_pubkey && !document.getElementById('input-wallet-address').value) {
-                    document.getElementById('input-wallet-address').value = cfg.wallet_pubkey;
-                    document.getElementById('wallet-status-badge').innerText = 'WALLET CONNECTED 🟢';
-                    document.getElementById('wallet-status-badge').className = 'text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        function setFeedStatus(connected) {
+            document.getElementById('ws-status').innerText = connected ? 'LIVE FEED' : 'RECONNECTING...';
+            document.getElementById('ws-pulse').className =
+                `w-2.5 h-2.5 rounded-full ${connected ? 'bg-solanaGreen' : 'bg-red-500'} pulse-live`;
+        }
+
+        function connectWS() {
+            ws = new WebSocket(`${wsProtocol}//${window.location.host}`);
+
+            ws.onopen = () => {
+                wsBackoffMs = 3000;
+                setFeedStatus(true);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'INIT' || msg.type === 'TRADES_UPDATE') {
+                        latestData = msg.payload;
+                        updateUI(latestData);
+                    }
+                } catch (e) {}
+            };
+
+            ws.onclose = () => {
+                setFeedStatus(false);
+                setTimeout(connectWS, wsBackoffMs);
+                wsBackoffMs = Math.min(wsBackoffMs * 2, 15000); // cap at 15s
+            };
+        }
+
+        connectWS();
+
+        let dualSliderTouched = false;
+        let triSliderTouched = false;
+
+        function getStatusBadge(status) {
+            if (!status) return '<span class="px-1.5 py-0.5 rounded bg-gray-500/20 text-gray-400 font-bold">--</span>';
+            if (status === 'LANDED_CONFIRMED') {
+                return '<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">LANDED ✅</span>';
+            }
+            if (status === 'DISPATCHED_TO_JITO') {
+                return '<span class="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold">DISPATCHED 🚀</span>';
+            }
+            if (status === 'DROPPED_BY_VALIDATOR') {
+                return '<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">DROPPED (REVERT GUARD) 🛡️</span>';
+            }
+            if (status === 'JITO_REJECTED') {
+                return '<span class="px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 font-bold">REJECTED ❌</span>';
+            }
+            return `<span class="px-1.5 py-0.5 rounded bg-gray-500/20 text-gray-400 font-bold">${status}</span>`;
+        }
+
+        function formatNumber(num) {
+            if (!num || isNaN(num)) return '0';
+            if (num >= 1_000_000) return (num / 1_000_000).toFixed(2) + 'M';
+            if (num >= 1_000) return (num / 1_000).toFixed(1) + 'k';
+            return num.toFixed(0);
+        }
+
+        function formatPrice(p) {
+            if (!p || isNaN(p) || p <= 0) return '0.00';
+            if (p < 0.000001) return p.toExponential(2);
+            if (p < 0.01) return p.toFixed(6);
+            if (p < 1.0) return p.toFixed(4);
+            return p.toFixed(2);
+        }
+
+        function getDexBadgeClass(dex) {
+            const d = (dex || '').toUpperCase();
+            if (d.includes('RAYDIUM')) return 'bg-purple-500/20 text-purple-300 border border-purple-500/30';
+            if (d.includes('METEORA') || d.includes('DLMM')) return 'bg-amber-500/20 text-amber-300 border border-amber-500/30';
+            if (d.includes('ORCA') || d.includes('WHIRLPOOL')) return 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30';
+            if (d.includes('PUMP')) return 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+            return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+        }
+
+        function getSpreadBadgeClass(spread) {
+            if (spread >= 1.5) return 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 glow-green';
+            if (spread >= 0.5) return 'bg-solanaGreen/20 text-solanaGreen border border-solanaGreen/30';
+            if (spread >= 0.2) return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30';
+            return 'bg-gray-500/10 text-gray-400 border border-darkBorder';
+        }
+
+        function handleTokenSearch(val) {
+            tokenFilterQuery = (val || '').trim().toLowerCase();
+            renderTrackedTokens();
+        }
+
+        function renderTrackedTokens() {
+            const tokens = currentTrackedTokens || [];
+            const filtered = tokens.filter(t => {
+                if (!tokenFilterQuery) return true;
+                const sym = (t.symbol || '').toLowerCase();
+                const name = (t.name || '').toLowerCase();
+                const mint = (t.mint || '').toLowerCase();
+                const dexes = (t.pools || []).map(p => (p.dex || '').toLowerCase()).join(' ');
+                return sym.includes(tokenFilterQuery) || name.includes(tokenFilterQuery) || mint.includes(tokenFilterQuery) || dexes.includes(tokenFilterQuery);
+            });
+
+            const arbReadyCount = tokens.filter(t => (t.best_spread_pct || 0) >= 0.5 && (t.pool_count || 0) >= 2).length;
+            const topSpread = tokens.reduce((max, t) => Math.max(max, t.best_spread_pct || 0), 0);
+
+            // Update badge counts on Dual-Leg
+            const dualCountBadge = document.getElementById('dual-tracked-count-badge');
+            if (dualCountBadge) dualCountBadge.innerText = `${tokens.length} Tokens Tracked`;
+            const dualArbReady = document.getElementById('dual-arb-ready-count');
+            if (dualArbReady) dualArbReady.innerText = `${arbReadyCount}`;
+            const dualTopSpread = document.getElementById('dual-top-spread-badge');
+            if (dualTopSpread) dualTopSpread.innerText = `+${topSpread.toFixed(2)}%`;
+
+            // Update badge counts on Triangular
+            const triCountBadge = document.getElementById('tri-tracked-count-badge');
+            if (triCountBadge) triCountBadge.innerText = `${tokens.length} Tokens Tracked`;
+            const triArbReady = document.getElementById('tri-arb-ready-count');
+            if (triArbReady) triArbReady.innerText = `${arbReadyCount}`;
+            const triTopSpread = document.getElementById('tri-top-spread-badge');
+            if (triTopSpread) triTopSpread.innerText = `+${topSpread.toFixed(2)}%`;
+
+            const rowsHtml = filtered.length === 0 ? `
+                <tr>
+                    <td colspan="7" class="p-6 text-center text-gray-500">
+                        ${tokens.length === 0 ? 'Scanning DEX liquidity matrices (Raydium, Meteora, PumpSwap, Orca)...' : 'No tokens match filter "' + tokenFilterQuery + '"'}
+                    </td>
+                </tr>
+            ` : filtered.map(t => {
+                const pools = t.pools || [];
+                const poolsBadges = pools.map(p => `
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${getDexBadgeClass(p.dex)}">
+                        <span>${p.dex}</span>
+                        <span class="text-gray-400 font-normal">$${formatNumber(p.liquidity_usd)}</span>
+                    </span>
+                `).join('');
+
+                const hasSpread = t.buy_dex && t.sell_dex && t.best_spread_pct > 0;
+                const routeHtml = hasSpread ? `
+                    <div class="text-[11px] leading-tight">
+                        <div class="text-emerald-400 font-semibold flex items-center gap-1">
+                            <span class="text-gray-400 text-[10px]">BUY:</span> ${t.buy_dex}
+                            <span class="text-gray-300 font-mono text-[10px]">($${formatPrice(t.buy_price_usd)})</span>
+                        </div>
+                        <div class="text-red-400 font-semibold flex items-center gap-1">
+                            <span class="text-gray-400 text-[10px]">SELL:</span> ${t.sell_dex}
+                            <span class="text-gray-300 font-mono text-[10px]">($${formatPrice(t.sell_price_usd)})</span>
+                        </div>
+                    </div>
+                ` : `<span class="text-gray-500 text-[10px]">${pools.length >= 2 ? 'Equilibrium' : 'Single Pool'}</span>`;
+
+                let statusBadge = '<span class="px-2 py-0.5 rounded bg-gray-500/10 text-gray-400 text-[10px]">1 POOL</span>';
+                if ((t.best_spread_pct || 0) >= 1.0 && (t.pool_count || 0) >= 2) {
+                    statusBadge = '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold text-[10px] glow-green">🔥 FAT SPREAD</span>';
+                } else if ((t.best_spread_pct || 0) >= 0.5 && (t.pool_count || 0) >= 2) {
+                    statusBadge = '<span class="px-2 py-0.5 rounded bg-solanaGreen/20 text-solanaGreen border border-solanaGreen/30 font-bold text-[10px]">🟢 ARB READY</span>';
+                } else if ((t.pool_count || 0) >= 2) {
+                    statusBadge = '<span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20 text-[10px]">⚡ MONITORING</span>';
                 }
-                if (cfg.status_label) {
-                    document.getElementById('live-engine-status-text').innerHTML = `Status: <b class="${cfg.is_engine_running ? 'text-solanaGreen' : 'text-yellow-400'}">${cfg.status_label}</b>`;
-                }
-                document.getElementById('live-wallet-bal').innerText = `${(cfg.wallet_balance_sol || 0.38).toFixed(4)} SOL`;
-                document.getElementById('live-wallet-usd').innerText = `$${((cfg.wallet_balance_sol || 0.38) * solPrice).toFixed(2)}`;
-                document.getElementById('live-max-risk').innerText = `${(cfg.max_position_sol || 0.08).toFixed(4)} SOL (${Math.round(((cfg.max_position_sol || 0.08)/(cfg.wallet_balance_sol || 0.38))*100)}%)`;
+
+                const mintTrunc = t.mint ? `${t.mint.substring(0, 4)}...${t.mint.substring(t.mint.length - 4)}` : '--';
+
+                return `
+                    <tr class="hover:bg-darkBg/70 transition">
+                        <td class="p-2.5">
+                            <div class="flex flex-col">
+                                <div class="font-bold text-white flex items-center gap-1.5">
+                                    <span class="text-solanaGreen font-mono text-sm">${t.symbol || 'TOKEN'}</span>
+                                    <span class="text-[10px] text-gray-400 font-normal truncate max-w-[110px]">${t.name || ''}</span>
+                                </div>
+                                <a href="https://solscan.io/token/${t.mint}" target="_blank" class="text-[10px] text-gray-500 hover:text-neonBlue flex items-center gap-0.5 font-mono">
+                                    ${mintTrunc}
+                                    <i data-lucide="external-link" class="w-2.5 h-2.5"></i>
+                                </a>
+                            </div>
+                        </td>
+                        <td class="p-2.5">
+                            <div class="flex flex-wrap gap-1 max-w-xs">
+                                ${poolsBadges || '<span class="text-gray-500 text-[10px]">No Pools</span>'}
+                            </div>
+                        </td>
+                        <td class="p-2.5">${routeHtml}</td>
+                        <td class="p-2.5">
+                            <span class="px-2 py-1 rounded font-bold text-xs ${getSpreadBadgeClass(t.best_spread_pct || 0)}">
+                                ${(t.best_spread_pct || 0) >= 0 ? '+' : ''}${(t.best_spread_pct || 0).toFixed(2)}%
+                            </span>
+                        </td>
+                        <td class="p-2.5 font-mono text-gray-300">$${formatNumber(t.volume_5m_usd || 0)}</td>
+                        <td class="p-2.5 font-mono text-gray-200 font-semibold">$${formatNumber(t.total_liquidity_usd || 0)}</td>
+                        <td class="p-2.5">${statusBadge}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const dualTbody = document.getElementById('dual-tracked-tokens-tbody');
+            if (dualTbody) dualTbody.innerHTML = rowsHtml;
+
+            const triTbody = document.getElementById('tri-tracked-tokens-tbody');
+            if (triTbody) triTbody.innerHTML = rowsHtml;
+
+            lucide.createIcons();
+        }
+
+        function updateUI(data) {
+            if (!data) return;
+
+            if (data.sol_price_usd) {
+                document.getElementById('sol-price').innerText = `$${data.sol_price_usd.toFixed(2)}`;
             }
 
-            let instData = data.instance_live;
-            if (currentTab === 'micro') instData = data.instance_micro;
-            if (currentTab === '1sol') instData = data.instance_1sol;
-            if (currentTab === '10sol') instData = data.instance_10sol;
+            if (data.system) {
+                document.getElementById('sys-ram').innerText = `${data.system.memory_used_mb} MB`;
+                document.getElementById('sys-cpu').innerText = `${data.system.cpu_percent}%`;
+            }
 
-            if (instData) {
-                document.getElementById('stat-balance-sol').innerText = `${instData.virtual_balance_sol.toFixed(4)} SOL`;
-                document.getElementById('stat-balance-usd').innerText = `$${(instData.virtual_balance_sol * solPrice).toFixed(2)} USD`;
+            // Update Tracked Tokens Matrix
+            if (data.tracked_tokens && Array.isArray(data.tracked_tokens)) {
+                currentTrackedTokens = data.tracked_tokens;
+                renderTrackedTokens();
+            }
+
+            // Update Dual-Leg Panel
+            if (data.dual_leg) {
+                const dl = data.dual_leg;
+                document.getElementById('dual-wallet-bal').innerText = `${dl.virtual_balance_sol.toFixed(4)} SOL`;
+                document.getElementById('dual-wallet-usd').innerText = `$${(dl.virtual_balance_sol * data.sol_price_usd).toFixed(2)}`;
                 
-                const pnlPrefix = instData.total_pnl_sol >= 0 ? '+' : '';
-                document.getElementById('stat-pnl-sol').innerText = `${pnlPrefix}${instData.total_pnl_sol.toFixed(4)} SOL`;
-                document.getElementById('stat-pnl-usd').innerText = `${pnlPrefix}$${instData.total_pnl_usd.toFixed(2)} USD`;
-                document.getElementById('stat-pnl-sol').className = `text-lg md:text-xl font-bold ${instData.total_pnl_sol >= 0 ? 'text-solanaGreen' : 'text-dangerRed'}`;
-                document.getElementById('stat-pnl-usd').className = `text-xs font-semibold ${instData.total_pnl_sol >= 0 ? 'text-solanaGreen' : 'text-dangerRed'}`;
-
-                document.getElementById('stat-win-rate').innerText = `${instData.win_rate}%`;
-                document.getElementById('stat-trade-counts').innerText = `${instData.winning_trades} W / ${instData.failed_trades} F`;
-                document.getElementById('stat-total-trades').innerText = instData.total_trades;
-                document.getElementById('stat-pools-tracked').innerText = data.system?.active_pools_count || 0;
-
-                // Update Chart
-                if (instData.equity_history && instData.equity_history.length > 0) {
-                    chartInstance.data.labels = instData.equity_history.map(h => h.time);
-                    chartInstance.data.datasets[0].data = instData.equity_history.map(h => h.balance);
-                    chartInstance.update();
+                if (dl.config) {
+                    if (dl.config.reserve_floor_sol) {
+                        document.getElementById('dual-floor-display').innerText = `${dl.config.reserve_floor_sol.toFixed(4)} SOL 🛡️`;
+                    }
+                    if (dl.config.max_position_sol) {
+                        const pct = ((dl.config.max_position_sol / dl.virtual_balance_sol) * 100).toFixed(1);
+                        document.getElementById('dual-max-risk-display').innerText = `${dl.config.max_position_sol.toFixed(4)} SOL (${pct}%)`;
+                        if (!dualSliderTouched) {
+                            document.getElementById('slider-dual-pos').value = dl.config.max_position_sol;
+                            document.getElementById('val-dual-pos').innerText = `${dl.config.max_position_sol} SOL`;
+                        }
+                    }
+                    if (dl.config.status_label) {
+                        document.getElementById('dual-engine-status-text').innerHTML = `Status: <b class="text-solanaGreen">${dl.config.status_label}</b>`;
+                    }
                 }
 
-                // Update Trades Table
-                const tbody = document.getElementById('trades-table-body');
-                if (instData.recent_trades && instData.recent_trades.length > 0) {
-                    tbody.innerHTML = instData.recent_trades.map(t => `
-                        <tr class="hover:bg-darkBg/80 transition">
-                            <td class="p-2 text-gray-400">${t.iso_time ? t.iso_time.substring(11, 19) : 'Just Now'}</td>
-                            <td class="p-2 font-bold text-white">${t.symbol}</td>
-                            <td class="p-2 text-gray-300">${(t.simulated_swap_sol || t.position_size_sol || 0).toFixed(4)} SOL</td>
-                            <td class="p-2 font-bold ${(t.net_pnl_sol || t.expected_net_profit_sol || 0) >= 0 ? 'text-solanaGreen' : 'text-dangerRed'}">
-                                ${((t.net_pnl_sol || t.expected_net_profit_sol || 0) >= 0 ? '+' : '')}${(t.net_pnl_sol || t.expected_net_profit_sol || 0).toFixed(5)} SOL
-                            </td>
-                            <td class="p-2 text-solanaPurple">${(t.jito_tip_sol || 0.00008).toFixed(5)} SOL</td>
-                            <td class="p-2">
-                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${t.status === 'FILLED' || t.live_status === 'LANDED_CONFIRMED' ? 'bg-solanaGreen/20 text-solanaGreen' : 'bg-dangerRed/20 text-dangerRed'}">
-                                    ${t.status || t.live_status || 'LANDED'}
-                                </span>
-                            </td>
-                            <td class="p-2 text-gray-300">${(t.ending_wallet_balance_sol || t.post_balance_sol || 0.38).toFixed(4)} SOL</td>
+                document.getElementById('dual-stat-trades').innerText = dl.total_trades;
+                document.getElementById('dual-stat-winrate').innerText = `${dl.win_rate}%`;
+                document.getElementById('dual-stat-pnl-sol').innerText = `${dl.total_pnl_sol >= 0 ? '+' : ''}${dl.total_pnl_sol.toFixed(4)} SOL`;
+                document.getElementById('dual-stat-pnl-usd').innerText = `${dl.total_pnl_usd >= 0 ? '+$' : '-$'}${Math.abs(dl.total_pnl_usd).toFixed(2)}`;
+
+                if (dl.recent_trades && dl.recent_trades.length > 0) {
+                    const tbody = document.getElementById('dual-trades-tbody');
+                    tbody.innerHTML = dl.recent_trades.map(t => `
+                        <tr class="hover:bg-darkBg/60">
+                            <td class="p-2 text-gray-400">${t.iso_time ? t.iso_time.substring(11, 19) : '--'}</td>
+                            <td class="p-2 font-bold text-white">${t.symbol || (t.mint ? t.mint.substring(0, 6) : '--')}</td>
+                            <td class="p-2 text-gray-300">${t.position_size_sol ? t.position_size_sol.toFixed(4) : '--'} SOL</td>
+                            <td class="p-2 font-bold text-emerald-400">+${t.expected_net_profit_sol ? t.expected_net_profit_sol.toFixed(5) : (t.net_pnl_sol ? t.net_pnl_sol.toFixed(5) : '0.00000')} SOL</td>
+                            <td class="p-2 text-yellow-400">${t.jito_tip_sol ? t.jito_tip_sol.toFixed(5) : '0.00010'} SOL</td>
+                            <td class="p-2">${getStatusBadge(t.live_status || t.status)}</td>
+                            <td class="p-2 text-gray-500"><a href="https://solscan.io/tx/${t.bundle_signature || ''}" target="_blank" class="hover:text-neonBlue">${t.bundle_signature ? t.bundle_signature.substring(0, 8) + '...' : '--'}</a></td>
                         </tr>
                     `).join('');
                 }
             }
 
-            // Update Scanner Table
-            if (data.system?.live_dex_monitor && data.system.live_dex_monitor.length > 0) {
-                const sbody = document.getElementById('scanner-table-body');
-                sbody.innerHTML = data.system.live_dex_monitor.slice(0, 15).map(m => `
-                    <tr class="hover:bg-darkBg/80 transition">
-                        <td class="p-2 text-gray-400">${m.time}</td>
-                        <td class="p-2 font-bold text-white">${m.symbol}</td>
-                        <td class="p-2 text-gray-300">${m.raydiumPrice}</td>
-                        <td class="p-2 text-gray-300">${m.meteoraPrice}</td>
-                        <td class="p-2 text-gray-300">${m.pumpPrice}</td>
-                        <td class="p-2 text-gray-300">${m.orcaPrice}</td>
-                        <td class="p-2 font-bold text-solanaGreen">${m.netSpreadPct}%</td>
-                        <td class="p-2 text-neonBlue">${m.bestRoute}</td>
-                        <td class="p-2 text-gray-300">${m.volume5m}</td>
-                        <td class="p-2 text-gray-400">${m.totalLiquidity}</td>
-                    </tr>
-                `).join('');
+            // Update Triangular Panel
+            if (data.triangular) {
+                const tri = data.triangular;
+                document.getElementById('tri-wallet-bal').innerText = `${tri.virtual_balance_sol.toFixed(4)} SOL`;
+                document.getElementById('tri-wallet-usd').innerText = `$${(tri.virtual_balance_sol * data.sol_price_usd).toFixed(2)}`;
+                
+                if (tri.config) {
+                    if (tri.config.reserve_floor_sol) {
+                        document.getElementById('tri-floor-display').innerText = `${tri.config.reserve_floor_sol.toFixed(4)} SOL 🛡️`;
+                    }
+                    if (tri.config.max_position_sol) {
+                        const pct = ((tri.config.max_position_sol / tri.virtual_balance_sol) * 100).toFixed(1);
+                        document.getElementById('tri-max-risk-display').innerText = `${tri.config.max_position_sol.toFixed(4)} SOL (${pct}%)`;
+                        if (!triSliderTouched) {
+                            document.getElementById('slider-tri-pos').value = tri.config.max_position_sol;
+                            document.getElementById('val-tri-pos').innerText = `${tri.config.max_position_sol} SOL`;
+                        }
+                    }
+                    if (tri.config.status_label) {
+                        document.getElementById('tri-engine-status-text').innerHTML = `Status: <b class="text-solanaGreen">${tri.config.status_label}</b>`;
+                    }
+                }
+
+                document.getElementById('tri-stat-trades').innerText = tri.total_trades;
+                document.getElementById('tri-stat-winrate').innerText = `${tri.win_rate}%`;
+                document.getElementById('tri-stat-pnl-sol').innerText = `${tri.total_pnl_sol >= 0 ? '+' : ''}${tri.total_pnl_sol.toFixed(4)} SOL`;
+                document.getElementById('tri-stat-pnl-usd').innerText = `${tri.total_pnl_usd >= 0 ? '+$' : '-$'}${Math.abs(tri.total_pnl_usd).toFixed(2)}`;
+
+                if (tri.recent_trades && tri.recent_trades.length > 0) {
+                    const tbody = document.getElementById('tri-trades-tbody');
+                    tbody.innerHTML = tri.recent_trades.map(t => `
+                        <tr class="hover:bg-darkBg/60">
+                            <td class="p-2 text-gray-400">${t.iso_time ? t.iso_time.substring(11, 19) : '--'}</td>
+                            <td class="p-2 font-bold text-solanaGreen">${t.symbol || 'TRI/' + (t.mint ? t.mint.substring(0, 4) : '')}</td>
+                            <td class="p-2 text-gray-300">${t.position_size_sol ? t.position_size_sol.toFixed(4) : '0.0180'} SOL</td>
+                            <td class="p-2 font-bold text-emerald-400">+${t.expected_net_profit_sol ? t.expected_net_profit_sol.toFixed(5) : (t.net_pnl_sol ? t.net_pnl_sol.toFixed(5) : '0.00020')} SOL</td>
+                            <td class="p-2 text-yellow-400">${t.jito_tip_sol ? t.jito_tip_sol.toFixed(5) : '0.00015'} SOL</td>
+                            <td class="p-2">${getStatusBadge(t.live_status || t.status)}</td>
+                            <td class="p-2 text-gray-500"><a href="https://solscan.io/tx/${t.bundle_signature || ''}" target="_blank" class="hover:text-solanaGreen">${t.bundle_signature ? t.bundle_signature.substring(0, 8) + '...' : '--'}</a></td>
+                        </tr>
+                    `).join('');
+                }
+            }
+
+            // Update Shadow Panel
+            if (currentTab !== 'dual' && currentTab !== 'triangular') {
+                const shadowData = data[currentTab];
+                if (shadowData) {
+                    document.getElementById('shadow-stat-trades').innerText = shadowData.total_trades || 0;
+                    document.getElementById('shadow-stat-winrate').innerText = `${shadowData.win_rate || '0.0'}%`;
+                    document.getElementById('shadow-stat-pnl-sol').innerText = `${shadowData.total_pnl_sol >= 0 ? '+' : ''}${shadowData.total_pnl_sol || 0} SOL`;
+                    document.getElementById('shadow-stat-pnl-usd').innerText = `$${shadowData.total_pnl_usd || 0}`;
+                }
             }
         }
 
-        // Live Controls
-        async function saveConnectedWallet() {
-            const pubkey = document.getElementById('input-wallet-address').value.trim();
-            if (!pubkey) return alert('Please enter a valid Solana public address');
-            
-            // Persist to local storage
-            localStorage.setItem('solana_mev_wallet', pubkey);
-
-            const res = await fetch('/api/live/wallet', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ publicKey: pubkey })
-            });
-            const json = await res.json();
-            if (json.success) {
-                document.getElementById('wallet-status-badge').innerText = 'WALLET CONNECTED 🟢';
-                document.getElementById('wallet-status-badge').className = 'text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
-                document.getElementById('live-wallet-bal').innerText = `${json.config.wallet_balance_sol.toFixed(4)} SOL`;
-                document.getElementById('live-wallet-usd').innerText = `$${(json.config.wallet_balance_sol * 88.50).toFixed(2)}`;
-            }
+        // V42 GLOBAL KILL SWITCH — sub-second halt across every engine process
+        async function toggleGlobalKillswitch(engage) {
+            if (engage && !confirm('⛔ HALT ALL LIVE TRADING? Every engine stops dispatching within 250ms.')) return;
+            try {
+                await fetch('/api/killswitch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ engaged: engage })
+                });
+                await refreshKillswitchState();
+            } catch (e) { console.error('Kill switch toggle failed', e); }
         }
 
-        async function controlLiveEngine(action) {
-            const res = await fetch('/api/live/control', {
+        async function refreshKillswitchState() {
+            try {
+                const r = await fetch('/api/killswitch');
+                const { engaged } = await r.json();
+                const badge = document.getElementById('killswitch-state-badge');
+                if (!badge) return;
+                if (engaged) {
+                    badge.textContent = '⛔ ALL TRADING HALTED';
+                    badge.className = 'text-[10px] px-2 py-1 rounded font-bold bg-red-600/30 text-red-300 border border-red-500/50 animate-pulse';
+                } else {
+                    badge.textContent = 'TRADING LIVE';
+                    badge.className = 'text-[10px] px-2 py-1 rounded font-bold bg-solanaGreen/20 text-solanaGreen border border-solanaGreen/30';
+                }
+            } catch (e) { /* dashboard offline — kill file still authoritative server-side */ }
+        }
+        setInterval(refreshKillswitchState, 3000);
+        document.addEventListener('DOMContentLoaded', refreshKillswitchState);
+
+        // Dual-Leg API Calls
+        async function controlDualEngine(action) {
+            await fetch('/api/dual/control', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action })
             });
-            const json = await res.json();
-            if (json.success) {
-                document.getElementById('live-engine-status-text').innerHTML = `Status: <b class="${action === 'start' ? 'text-solanaGreen' : 'text-yellow-400'}">${json.status}</b>`;
-            }
+            alert(`Dual-Leg Engine action sent: ${action.toUpperCase()}`);
         }
 
-        async function saveLiveConfig() {
-            const max_pos = document.getElementById('range-pos-size').value;
-            const min_spread = document.getElementById('range-min-spread').value;
-            const min_profit = document.getElementById('range-min-profit').value;
-            const jito_tip = document.getElementById('range-jito-tip').value;
+        async function saveDualConfig() {
+            const max_position_sol = parseFloat(document.getElementById('slider-dual-pos').value);
+            const min_spread_pct = parseFloat(document.getElementById('slider-dual-spread').value);
+            const max_slippage_pct = parseFloat(document.getElementById('slider-dual-slip').value);
+            const jito_tip_pct = parseFloat(document.getElementById('slider-dual-tip').value);
 
-            await fetch('/api/live/config', {
+            await fetch('/api/dual/config', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    max_position_sol: max_pos,
-                    min_spread_pct: min_spread,
-                    min_net_profit_sol: min_profit,
-                    jito_tip_pct: jito_tip
-                })
+                body: JSON.stringify({ max_position_sol, min_spread_pct, max_slippage_pct, jito_tip_pct })
             });
-            alert('Live Trading Parameters Successfully Updated & Synchronized!');
+            alert('Dual-Leg Parameters saved to disk!');
         }
 
-        // On Page Load: Restore Saved Local Storage State
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedWallet = localStorage.getItem('solana_mev_wallet');
-            if (savedWallet) {
-                document.getElementById('input-wallet-address').value = savedWallet;
-                document.getElementById('wallet-status-badge').innerText = 'WALLET CONNECTED 🟢';
-                document.getElementById('wallet-status-badge').className = 'text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
-            }
-            switchTab(currentTab);
-        });
-
-        // Connect WebSocket
-        function connectWS() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const ws = new WebSocket(`${protocol}//${window.location.host}`);
-            ws.onmessage = (event) => {
-                const msg = JSON.parse(event.data);
-                if (msg.type === 'INIT' || msg.type === 'TRADES_UPDATE') {
-                    renderStats(msg.payload);
-                }
-            };
-            ws.onclose = () => setTimeout(connectWS, 2000);
+        // Triangular API Calls
+        async function controlTriangularEngine(action) {
+            await fetch('/api/triangular/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action })
+            });
+            alert(`Triangular Engine action sent: ${action.toUpperCase()}`);
         }
-        connectWS();
+
+        async function saveTriangularConfig() {
+            const max_position_sol = parseFloat(document.getElementById('slider-tri-pos').value);
+            const max_compound_slippage_pct = parseFloat(document.getElementById('slider-tri-slip').value);
+            const jito_tip_pct = parseFloat(document.getElementById('slider-tri-tip').value);
+
+            await fetch('/api/triangular/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ max_position_sol, max_compound_slippage_pct, jito_tip_pct })
+            });
+            alert('Triangular Parameters saved to disk!');
+        }
     </script>
 </body>
 </html>

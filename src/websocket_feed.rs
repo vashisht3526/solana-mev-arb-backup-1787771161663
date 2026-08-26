@@ -1,7 +1,6 @@
 use futures_util::{SinkExt, StreamExt};
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc::Sender;
 use tokio::time::sleep;
@@ -59,6 +58,15 @@ impl PumpPortalFeed {
                     });
                     if let Err(e) = ws_stream.send(Message::Text(new_token_sub.to_string())).await {
                         error!("Failed to subscribe to new tokens: {}", e);
+                    }
+
+                    // 3. Subscribe to all token trades (Real-time live swap stream)
+                    let token_trades_sub = serde_json::json!({
+                        "method": "subscribeTokenTrade",
+                        "keys": []
+                    });
+                    if let Err(e) = ws_stream.send(Message::Text(token_trades_sub.to_string())).await {
+                        error!("Failed to subscribe to live token trades: {}", e);
                     }
 
                     while let Some(msg) = ws_stream.next().await {

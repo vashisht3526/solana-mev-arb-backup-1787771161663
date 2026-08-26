@@ -2,22 +2,52 @@
 name = "solana-mev-arb"
 version = "0.1.0"
 edition = "2021"
-description = "High-Performance Low-Latency Solana Cross-DEX Arbitrage Engine with Mainnet Shadow Paper-Trading"
+description = "High-Performance Low-Latency Solana Cross-DEX Arbitrage Engine with Mainnet Shadow Paper-Trading and Real Jito Execution"
+
+[[bin]]
+name = "solana-mev-arb"
+path = "src/main.rs"
+
+[[bin]]
+name = "sell_all"
+path = "src/bin/sell_all.rs"
+
+[[bin]]
+name = "reclaim_rent"
+path = "src/bin/reclaim_rent.rs"
+
+[[bin]]
+name = "migration_sniper"
+path = "src/bin/migration_sniper.rs"
+
+[workspace]
+members = [
+    ".",
+    "crates/swaps",
+]
 
 [dependencies]
 tokio = { version = "1.38", features = ["full"] }
-tokio-tungstenite = { version = "0.23", features = ["native-tls"] }
+tokio-tungstenite = { version = "0.20", features = ["native-tls"] }
 futures = "0.3"
 futures-util = "0.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+reqwest = { version = "0.11", features = ["json"] }
 chrono = { version = "0.4", features = ["serde"] }
 log = "0.4"
-env_logger = "0.11"
+env_logger = "0.10"
 url = "2.5"
-dashmap = "6.1"
+dashmap = "5.5"
 anyhow = "1.0"
+bs58 = "0.5"
+base64 = "0.21"
+ed25519-dalek = { version = "2.1", default-features = false }
+solana-sdk = "1.18"
+spl-token = "4.0"
+spl-associated-token-account = "2.3"
+bincode = "1.3"
+swaps = { path = "crates/swaps", features = ["raydium-amm-v4", "raydium-cpmm", "pumpfun", "meteora-dlmm", "orca-whirlpool"] }
 
 [profile.release]
 opt-level = 3

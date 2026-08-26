@@ -16,110 +16,126 @@ const DATA_DIR = path.join(__dirname, '..', 'data');
 const PAPER_TRADES_MICRO_PATH = path.join(DATA_DIR, 'paper_trades_micro.ndjson');
 const PAPER_TRADES_1SOL_PATH = path.join(DATA_DIR, 'paper_trades_1sol.ndjson');
 const PAPER_TRADES_10SOL_PATH = path.join(DATA_DIR, 'paper_trades_10sol.ndjson');
+const PAPER_TRADES_TRIANGULAR_PATH = path.join(DATA_DIR, 'paper_trades_triangular.ndjson');
 const LIVE_TRADES_PATH = path.join(DATA_DIR, 'live_trades.ndjson');
+const DUAL_LEG_LIVE_TRADES_PATH = path.join(DATA_DIR, 'dual_leg_live_trades.ndjson');
+const TRIANGULAR_LIVE_TRADES_PATH = path.join(DATA_DIR, 'triangular_live_trades.ndjson');
+const MIGRATION_SHADOW_TRADES_PATH = path.join(DATA_DIR, 'migration_shadow_trades.ndjson');
+
+const DUAL_LEG_CONFIG_PATH = path.join(DATA_DIR, 'dual_leg_config.json');
+const TRIANGULAR_CONFIG_PATH = path.join(DATA_DIR, 'triangular_config.json');
 const LIVE_CONFIG_PATH = path.join(DATA_DIR, 'live_trading_config.json');
+const TRACKED_TOKENS_PATH = path.join(DATA_DIR, 'tracked_tokens.json');
+
+let trackedTokensCache = { mtimeMs: 0, data: [] };
+function getTrackedTokens() {
+    if (!fs.existsSync(TRACKED_TOKENS_PATH)) {
+        return [];
+    }
+    try {
+        const stats = fs.statSync(TRACKED_TOKENS_PATH);
+        if (trackedTokensCache.data && trackedTokensCache.mtimeMs === stats.mtimeMs) {
+            return trackedTokensCache.data;
+        }
+        const content = fs.readFileSync(TRACKED_TOKENS_PATH, 'utf-8');
+        const parsed = JSON.parse(content);
+        trackedTokensCache = { mtimeMs: stats.mtimeMs, data: parsed };
+        return parsed;
+    } catch (e) {
+        return trackedTokensCache.data || [];
+    }
+}
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-let liveSolPrice = 88.50;
+let liveSolPrice = 93.50;
 
-// Base58 encoder/decoder
-const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-function decodeBase58(s) {
-    const bytes = [0];
-    for (let i = 0; i < s.length; i++) {
-        const c = s[i];
-        const val = ALPHABET.indexOf(c);
-        if (val < 0) throw new Error('Illegal char');
-        for (let j = 0; j < bytes.length; j++) bytes[j] *= 58;
-        bytes[0] += val;
-        let carry = 0;
-        for (let j = 0; j < bytes.length; ++j) {
-            bytes[j] += carry;
-            carry = bytes[j] >> 8;
-            bytes[j] &= 0xff;
-        }
-        while (carry) {
-            bytes.push(carry & 0xff);
-            carry >>= 8;
-        }
-    }
-    for (let i = 0; i < s.length && s[i] === '1'; i++) bytes.push(0);
-    return Buffer.from(bytes.reverse());
-}
-
-function encodeBase58(buffer) {
-    const digits = [0];
-    for (let i = 0; i < buffer.length; i++) {
-        for (let j = 0; j < digits.length; j++) digits[j] <<= 8;
-        digits[0] += buffer[i];
-        let carry = 0;
-        for (let j = 0; j < digits.length; ++j) {
-            digits[j] += carry;
-            carry = (digits[j] / 58) | 0;
-            digits[j] %= 58;
-        }
-        while (carry) {
-            digits.push(carry % 58);
-            carry = (carry / 58) | 0;
-        }
-    }
-    for (let i = 0; buffer[i] === 0 && i < buffer.length - 1; i++) digits.push(0);
-    return digits.reverse().map(digit => ALPHABET[digit]).join('');
-}
-
-// Persistent Live Configuration
-let liveTradingConfig = {
+// === 1. DUAL-LEG ENGINE CONFIGURATION ===
+let dualLegConfig = {
     wallet_pubkey: 'AA1ihbehbPrMW4L9jWtdxJfkH76Up5F2azbeepQ1wixs',
-    wallet_balance_sol: 0.41,
+    wallet_balance_sol: 0.3981,
     is_engine_running: true,
-    max_position_sol: 0.05,
+    max_position_sol: 0.099,
     min_spread_pct: 0.50,
-    min_net_profit_sol: 0.00030,
-    jito_tip_pct: 25,
-    reserve_floor_sol: 0.10,
-    max_drawdown_sol: 0.05,
-    status_label: 'LIVE ACTIVE (Trading Real SOL)'
+    min_net_profit_sol: 0.00015,
+    max_slippage_pct: 0.35,
+    jito_tip_pct: 35.0,
+    reserve_floor_sol: 0.15,
+    status_label: 'DUAL-LEG CONCENTRATED (Meteora DLMM & Orca)'
 };
 
-// Load saved config from disk on startup
-if (fs.existsSync(LIVE_CONFIG_PATH)) {
+if (fs.existsSync(DUAL_LEG_CONFIG_PATH)) {
     try {
-        const saved = JSON.parse(fs.readFileSync(LIVE_CONFIG_PATH, 'utf-8'));
-        liveTradingConfig = { ...liveTradingConfig, ...saved };
+        const saved = JSON.parse(fs.readFileSync(DUAL_LEG_CONFIG_PATH, 'utf-8'));
+        dualLegConfig = { ...dualLegConfig, ...saved };
     } catch (e) {}
 }
 
-function saveLiveConfigToDisk() {
+function saveDualLegConfigToDisk() {
     try {
         if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-        fs.writeFileSync(LIVE_CONFIG_PATH, JSON.stringify(liveTradingConfig, null, 2));
+        fs.writeFileSync(DUAL_LEG_CONFIG_PATH, JSON.stringify(dualLegConfig, null, 2));
     } catch (e) {
-        console.error('⚠️ Failed to save live config to disk:', e.message);
+        console.error('⚠️ Failed to save dual-leg config:', e.message);
     }
 }
 
-// Periodically check PM2 status of rust-mev-arb-live
-function checkPm2EngineState() {
-    exec('pm2 jlist', (err, stdout) => {
-        if (!err && stdout) {
-            try {
-                const list = JSON.parse(stdout);
-                const liveProc = list.find(p => p.name === 'rust-mev-arb-live');
-                if (liveProc && liveProc.pm2_env && liveProc.pm2_env.status === 'online') {
-                    liveTradingConfig.is_engine_running = true;
-                    liveTradingConfig.status_label = 'LIVE ACTIVE (Trading Real SOL)';
-                } else {
-                    liveTradingConfig.is_engine_running = false;
-                    liveTradingConfig.status_label = 'PAUSED / STANDBY';
-                }
-            } catch (e) {}
-        }
-    });
+// === 2. TRIANGULAR ENGINE CONFIGURATION ===
+let triangularConfig = {
+    wallet_pubkey: 'AA1ihbehbPrMW4L9jWtdxJfkH76Up5F2azbeepQ1wixs',
+    wallet_balance_sol: 0.3981,
+    is_engine_running: true,
+    min_pool_tvl_usd: 10000.0,
+    max_pool_tvl_usd: 60000.0,
+    max_position_sol: 0.099,
+    min_spread_pct: 0.60,
+    min_net_profit_sol: 0.00015,
+    max_compound_slippage_pct: 0.30,
+    jito_tip_pct: 35.0,
+    reserve_floor_sol: 0.15,
+    intermediate_bridge: 'USDC',
+    status_label: 'TRIANGULAR CONCENTRATED ($10k-$60k Goldilocks Zone)'
+};
+
+if (fs.existsSync(TRIANGULAR_CONFIG_PATH)) {
+    try {
+        const saved = JSON.parse(fs.readFileSync(TRIANGULAR_CONFIG_PATH, 'utf-8'));
+        triangularConfig = { ...triangularConfig, ...saved };
+    } catch (e) {}
 }
-setInterval(checkPm2EngineState, 4000);
-checkPm2EngineState();
+
+function saveTriangularConfigToDisk() {
+    try {
+        if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+        fs.writeFileSync(TRIANGULAR_CONFIG_PATH, JSON.stringify(triangularConfig, null, 2));
+    } catch (e) {
+        console.error('⚠️ Failed to save triangular config:', e.message);
+    }
+}
+
+// V40 FIX: the on-chain-balance poller used to rewrite BOTH engine config files
+// wholesale from memory every poll tick. A dashboard instance that started before
+// an out-of-band config change would silently revert the files (and thus the live
+// engines' sizing/tips) forever. Now it patches only wallet_balance_sol on disk.
+function updateBalancesOnDisk() {
+    const targets = [
+        [DUAL_LEG_CONFIG_PATH, dualLegConfig.wallet_balance_sol],
+        [TRIANGULAR_CONFIG_PATH, triangularConfig.wallet_balance_sol]
+    ];
+    for (const [configPath, balance] of targets) {
+        try {
+            if (!fs.existsSync(configPath)) continue;
+            const current = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+            if (current && typeof current === 'object') {
+                current.wallet_balance_sol = balance;
+                fs.writeFileSync(configPath, JSON.stringify(current, null, 2));
+            }
+        } catch (e) {
+            console.error(`⚠️ Failed to patch balance in ${configPath}:`, e.message);
+        }
+    }
+}
 
 function fetchLiveSolPrice() {
     https.get('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT', { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
@@ -144,7 +160,7 @@ function fetchOnChainBalance(pubkey) {
         jsonrpc: '2.0',
         id: 1,
         method: 'getBalance',
-        params: [pubkey]
+        params: [pubkey, { commitment: 'confirmed' }]
     });
 
     const reqRpc = https.request({
@@ -164,8 +180,9 @@ function fetchOnChainBalance(pubkey) {
                 const rpcJson = JSON.parse(rd);
                 if (rpcJson.result && rpcJson.result.value !== undefined) {
                     const balSol = rpcJson.result.value / 1_000_000_000.0;
-                    liveTradingConfig.wallet_balance_sol = Number(balSol.toFixed(4));
-                    saveLiveConfigToDisk();
+                    dualLegConfig.wallet_balance_sol = Number(balSol.toFixed(4));
+                    triangularConfig.wallet_balance_sol = Number(balSol.toFixed(4));
+                    updateBalancesOnDisk();
                     broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
                 }
             } catch (e) {}
@@ -177,11 +194,13 @@ function fetchOnChainBalance(pubkey) {
 }
 
 setInterval(() => {
-    if (liveTradingConfig.wallet_pubkey) {
-        fetchOnChainBalance(liveTradingConfig.wallet_pubkey);
+    if (dualLegConfig.wallet_pubkey) {
+        fetchOnChainBalance(dualLegConfig.wallet_pubkey);
     }
 }, 5000);
-fetchOnChainBalance(liveTradingConfig.wallet_pubkey);
+fetchOnChainBalance(dualLegConfig.wallet_pubkey);
+
+const logFileCache = new Map();
 
 function parseLogFile(filePath, initialBalance) {
     if (!fs.existsSync(filePath)) {
@@ -200,6 +219,12 @@ function parseLogFile(filePath, initialBalance) {
     }
 
     try {
+        const stats = fs.statSync(filePath);
+        const cached = logFileCache.get(filePath);
+        if (cached && cached.mtimeMs === stats.mtimeMs) {
+            return cached.data;
+        }
+
         const content = fs.readFileSync(filePath, 'utf-8');
         const lines = content.trim().split('\n').filter(Boolean);
         const rawTrades = lines.map(line => {
@@ -207,7 +232,7 @@ function parseLogFile(filePath, initialBalance) {
         }).filter(Boolean);
 
         if (rawTrades.length === 0) {
-            return {
+            const res = {
                 initial_balance_sol: initialBalance,
                 virtual_balance_sol: initialBalance,
                 total_trades: 0,
@@ -219,38 +244,48 @@ function parseLogFile(filePath, initialBalance) {
                 recent_trades: [],
                 equity_history: [{ time: 'Start', balance: initialBalance }]
             };
+            logFileCache.set(filePath, { mtimeMs: stats.mtimeMs, data: res });
+            return res;
         }
 
-        const wins = rawTrades.filter(t => t.live_status === 'LANDED_CONFIRMED' || (t.status === 'FILLED' && t.net_pnl_sol > 0));
+        const wins = rawTrades.filter(t => t.live_status === 'LANDED_CONFIRMED' || (t.status === 'FILLED' && (t.net_pnl_sol !== undefined ? t.net_pnl_sol > 0 : false)));
         const fails = rawTrades.filter(t => (t.status && t.status !== 'FILLED') || (t.live_status && t.live_status !== 'LANDED_CONFIRMED'));
-        const totalPnlSol = rawTrades.reduce((acc, t) => acc + (t.net_pnl_sol || t.expected_net_profit_sol || 0), 0);
-        const totalPnlUsd = totalPnlSol * liveSolPrice;
-        const currentBalance = initialBalance + totalPnlSol;
+        
+        const lastTrade = rawTrades[rawTrades.length - 1];
+        const currentBalance = Number((lastTrade.ending_wallet_balance_sol || lastTrade.post_balance_sol || initialBalance).toFixed(4));
+        const totalPnlSol = Number((currentBalance - initialBalance).toFixed(4));
+        const totalPnlUsd = Number((totalPnlSol * liveSolPrice).toFixed(2));
         const winRate = rawTrades.length > 0 ? ((wins.length / rawTrades.length) * 100).toFixed(1) : '0.0';
 
         const equityHistory = [
             { time: 'Start', balance: initialBalance }
         ];
 
+        const step = Math.max(1, Math.floor(rawTrades.length / 100));
         rawTrades.forEach((t, idx) => {
-            equityHistory.push({
-                time: t.iso_time ? t.iso_time.substring(11, 19) : `#${idx + 1}`,
-                balance: Number((t.post_balance_sol || t.ending_wallet_balance_sol || (initialBalance + totalPnlSol)).toFixed(4))
-            });
+            if (idx % step === 0 || idx === rawTrades.length - 1) {
+                equityHistory.push({
+                    time: t.iso_time ? t.iso_time.substring(11, 19) : `#${idx + 1}`,
+                    balance: Number((t.ending_wallet_balance_sol || t.post_balance_sol || currentBalance).toFixed(4))
+                });
+            }
         });
 
-        return {
+        const result = {
             initial_balance_sol: initialBalance,
-            virtual_balance_sol: Number(currentBalance.toFixed(4)),
+            virtual_balance_sol: currentBalance,
             total_trades: rawTrades.length,
             winning_trades: wins.length,
             failed_trades: fails.length,
             win_rate: winRate,
-            total_pnl_sol: Number(totalPnlSol.toFixed(4)),
-            total_pnl_usd: Number(totalPnlUsd.toFixed(2)),
+            total_pnl_sol: totalPnlSol,
+            total_pnl_usd: totalPnlUsd,
             recent_trades: rawTrades.slice(-50).reverse(),
             equity_history: equityHistory
         };
+
+        logFileCache.set(filePath, { mtimeMs: stats.mtimeMs, data: result });
+        return result;
     } catch (e) {
         return {
             initial_balance_sol: initialBalance,
@@ -267,285 +302,324 @@ function parseLogFile(filePath, initialBalance) {
     }
 }
 
-// Global System Metrics
-let systemState = {
-    sol_price_usd: 88.50,
-    jito_latency_ms: 11.3,
-    server_uptime_sec: 0,
-    cpu_usage_pct: 0,
-    ram_usage_mb: 0,
-    active_pools_count: 0,
-    live_dex_monitor: [],
-    events_per_sec: 0,
-    total_events_processed: 0
-};
+function getDualLegStats() {
+    const raw = parseLogFile(DUAL_LEG_LIVE_TRADES_PATH, 0.3981);
+    const realOnChainBal = Number((dualLegConfig.wallet_balance_sol || 0.3981).toFixed(4));
+    const realPnlSol = Number((realOnChainBal - 0.3981).toFixed(4));
+    const realPnlUsd = Number((realPnlSol * liveSolPrice).toFixed(2));
 
-let activeVolatileRegistry = new Map();
-
-function runDiscoveryScout() {
-    const endpoints = [
-        'https://api.dexscreener.com/token-boosts/top/v1',
-        'https://api.dexscreener.com/token-boosts/latest/v1',
-        'https://api.dexscreener.com/token-profiles/latest/v1',
-        'https://api.dexscreener.com/latest/dex/search?q=pump',
-        'https://api.dexscreener.com/latest/dex/search?q=solana',
-        'https://api.dexscreener.com/latest/dex/search?q=meteora'
-    ];
-
-    let candidateMints = new Set();
-
-    endpoints.forEach(ep => {
-        https.get(ep, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } }, (res) => {
-            let d = '';
-            res.on('data', c => d += c);
-            res.on('end', () => {
-                try {
-                    const json = JSON.parse(d);
-                    if (Array.isArray(json)) {
-                        json.forEach(it => {
-                            if (it.chainId === 'solana' && it.tokenAddress) {
-                                candidateMints.add(it.tokenAddress);
-                            }
-                        });
-                    } else if (json.pairs && Array.isArray(json.pairs)) {
-                        json.pairs.forEach(p => {
-                            if (p.chainId === 'solana' && p.baseToken?.address) {
-                                candidateMints.add(p.baseToken.address);
-                            }
-                        });
-                    }
-
-                    candidateMints.forEach(mint => {
-                        https.get(`https://api.dexscreener.com/latest/dex/tokens/${mint}`, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (tRes) => {
-                            let td = '';
-                            tRes.on('data', tc => td += tc);
-                            tRes.on('end', () => {
-                                try {
-                                    const tJson = JSON.parse(td);
-                                    const pairs = tJson.pairs || [];
-                                    if (pairs.length === 0) return;
-
-                                    let symbol = pairs[0]?.baseToken?.symbol || 'TOKEN';
-                                    let name = pairs[0]?.baseToken?.name || 'Token';
-                                    let total5mVol = 0;
-                                    let totalLiq = 0;
-
-                                    let pools = { raydium: null, meteora: null, pumpswap: null, orca: null };
-
-                                    pairs.forEach(p => {
-                                        const dex = (p.dexId || '').toLowerCase();
-                                        const liq = p.liquidity?.usd || 0;
-                                        const vol5m = p.volume?.m5 || 0;
-                                        total5mVol += vol5m;
-                                        totalLiq += liq;
-                                        const price = parseFloat(p.priceUsd);
-
-                                        if (liq >= 1000 && !isNaN(price) && price > 0 && price < 10000) {
-                                            if (dex === 'raydium' && (!pools.raydium || liq > pools.raydium.liq)) {
-                                                pools.raydium = { price, liq };
-                                            } else if (dex === 'meteora' && (!pools.meteora || liq > pools.meteora.liq)) {
-                                                pools.meteora = { price, liq };
-                                            } else if (dex === 'pumpswap' && (!pools.pumpswap || liq > pools.pumpswap.liq)) {
-                                                pools.pumpswap = { price, liq };
-                                            } else if (dex === 'orca' && (!pools.orca || liq > pools.orca.liq)) {
-                                                pools.orca = { price, liq };
-                                            }
-                                        }
-                                    });
-
-                                    const activePools = [
-                                        { dex: 'Raydium', data: pools.raydium },
-                                        { dex: 'Meteora', data: pools.meteora },
-                                        { dex: 'PumpSwap', data: pools.pumpswap },
-                                        { dex: 'Orca', data: pools.orca }
-                                    ].filter(p => p.data !== null);
-
-                                    if (activePools.length >= 2 && total5mVol >= 10) {
-                                        activePools.sort((a, b) => a.data.price - b.data.price);
-                                        const low = activePools[0];
-                                        const high = activePools[activePools.length - 1];
-                                        const grossSpread = ((high.data.price - low.data.price) / low.data.price) * 100;
-
-                                        if (grossSpread <= 15.0) {
-                                            const netSpread = grossSpread - 0.50;
-                                            const entry = {
-                                                time: new Date().toLocaleTimeString(),
-                                                symbol,
-                                                name,
-                                                mint,
-                                                raydiumPrice: pools.raydium ? `$${pools.raydium.price.toFixed(6)}` : '—',
-                                                meteoraPrice: pools.meteora ? `$${pools.meteora.price.toFixed(6)}` : '—',
-                                                pumpPrice: pools.pumpswap ? `$${pools.pumpswap.price.toFixed(6)}` : '—',
-                                                orcaPrice: pools.orca ? `$${pools.orca.price.toFixed(6)}` : '—',
-                                                bestRoute: `${low.dex} ➔ ${high.dex}`,
-                                                grossSpreadPct: grossSpread.toFixed(2),
-                                                netSpreadPct: (netSpread >= 0 ? '+' : '') + netSpread.toFixed(2),
-                                                isProfitable: netSpread >= 0.40,
-                                                totalLiquidity: `$${Math.round(totalLiq).toLocaleString()}`,
-                                                volume5m: `$${Math.round(total5mVol).toLocaleString()}`
-                                            };
-
-                                            activeVolatileRegistry.set(mint, entry);
-                                            systemState.live_dex_monitor = Array.from(activeVolatileRegistry.values());
-                                            systemState.active_pools_count = systemState.live_dex_monitor.length;
-                                            systemState.total_events_processed++;
-                                            broadcast({ type: 'DEX_MONITOR_UPDATE', data: entry });
-                                        }
-                                    }
-                                } catch (e) {}
-                            });
-                        }).on('error', () => {});
-                    });
-                } catch (e) {}
-            });
-        }).on('error', () => {});
-    });
+    return {
+        initial_balance_sol: 0.3981,
+        virtual_balance_sol: realOnChainBal,
+        total_trades: raw.total_trades,
+        winning_trades: raw.winning_trades,
+        failed_trades: raw.failed_trades,
+        win_rate: raw.win_rate,
+        total_pnl_sol: realPnlSol,
+        total_pnl_usd: realPnlUsd,
+        recent_trades: raw.recent_trades,
+        config: dualLegConfig,
+        equity_history: [
+            { time: 'Start', balance: 0.3981 },
+            { time: 'Live', balance: realOnChainBal }
+        ]
+    };
 }
 
-setInterval(runDiscoveryScout, 4000);
-runDiscoveryScout();
+function getTriangularStats() {
+    const raw = parseLogFile(TRIANGULAR_LIVE_TRADES_PATH, 0.3981);
+    const realOnChainBal = Number((triangularConfig.wallet_balance_sol || 0.3981).toFixed(4));
+    const realPnlSol = Number((realOnChainBal - 0.3981).toFixed(4));
+    const realPnlUsd = Number((realPnlSol * liveSolPrice).toFixed(2));
 
-setInterval(() => {
-    systemState.server_uptime_sec = process.uptime();
-    const mem = process.memoryUsage();
-    systemState.ram_usage_mb = Math.round(mem.rss / 1024 / 1024);
-    systemState.cpu_usage_pct = Math.round(os.loadavg()[0] * 10) / 10;
-    systemState.sol_price_usd = liveSolPrice;
-}, 3000);
-
-function broadcast(data) {
-    const msg = JSON.stringify(data);
-    wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(msg);
-        }
-    });
+    return {
+        initial_balance_sol: 0.3981,
+        virtual_balance_sol: realOnChainBal,
+        total_trades: raw.total_trades,
+        winning_trades: raw.winning_trades,
+        failed_trades: raw.failed_trades,
+        win_rate: raw.win_rate,
+        total_pnl_sol: realPnlSol,
+        total_pnl_usd: realPnlUsd,
+        recent_trades: raw.recent_trades,
+        config: triangularConfig,
+        equity_history: [
+            { time: 'Start', balance: 0.3981 },
+            { time: 'Live', balance: realOnChainBal }
+        ]
+    };
 }
 
-if (fs.existsSync(DATA_DIR)) {
-    fs.watch(DATA_DIR, (eventType, filename) => {
-        if (filename && (filename.includes('paper_trades') || filename.includes('live_trades'))) {
-            broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
+let migCache = { mtimeMs: 0, data: null };
+function parseMigrationShadowLog() {
+    if (!fs.existsSync(MIGRATION_SHADOW_TRADES_PATH)) {
+        return {
+            total_migrations_evaluated: 0,
+            accepted_for_sniping: 0,
+            rejected_by_shields: 0,
+            completed_shadow_trades: 0,
+            winning_shadow_trades: 0,
+            win_rate: '0.0',
+            total_shadow_pnl_sol: 0.0,
+            total_shadow_pnl_usd: 0.0,
+            counterfactual_alpha_saved_sol: 0.0,
+            counterfactual_alpha_saved_usd: 0.0,
+            recent_evaluations: []
+        };
+    }
+
+    try {
+        const stats = fs.statSync(MIGRATION_SHADOW_TRADES_PATH);
+        if (migCache.data && migCache.mtimeMs === stats.mtimeMs) {
+            return migCache.data;
         }
-    });
+
+        const content = fs.readFileSync(MIGRATION_SHADOW_TRADES_PATH, 'utf-8');
+        const lines = content.trim().split('\n').filter(Boolean);
+        const records = lines.map(l => {
+            try { return JSON.parse(l); } catch (e) { return null; }
+        }).filter(Boolean);
+
+        let accepted = 0;
+        let rejected = 0;
+        let completed = 0;
+        let wins = 0;
+        let totalPnlSol = 0.0;
+        let counterfactualSavedSol = 0.0;
+
+        for (const r of records) {
+            if (r.decision === 'Accepted') {
+                accepted++;
+                if (r.pnl_sol !== undefined && r.pnl_sol !== null) {
+                    completed++;
+                    totalPnlSol += r.pnl_sol;
+                    if (r.pnl_sol > 0) wins++;
+                }
+            } else {
+                rejected++;
+                if (r.counterfactual_pnl_sol !== undefined && r.counterfactual_pnl_sol < 0) {
+                    counterfactualSavedSol += Math.abs(r.counterfactual_pnl_sol);
+                }
+            }
+        }
+
+        const result = {
+            total_migrations_evaluated: records.length,
+            accepted_for_sniping: accepted,
+            rejected_by_shields: rejected,
+            completed_shadow_trades: completed,
+            winning_shadow_trades: wins,
+            win_rate: completed > 0 ? ((wins / completed) * 100).toFixed(1) : '0.0',
+            total_shadow_pnl_sol: Number(totalPnlSol.toFixed(4)),
+            total_shadow_pnl_usd: Number((totalPnlSol * liveSolPrice).toFixed(2)),
+            counterfactual_alpha_saved_sol: Number(counterfactualSavedSol.toFixed(4)),
+            counterfactual_alpha_saved_usd: Number((counterfactualSavedSol * liveSolPrice).toFixed(2)),
+            recent_evaluations: records.slice(-50).reverse()
+        };
+
+        migCache = { mtimeMs: stats.mtimeMs, data: result };
+        return result;
+    } catch (e) {
+        return {
+            total_migrations_evaluated: 0,
+            accepted_for_sniping: 0,
+            rejected_by_shields: 0,
+            completed_shadow_trades: 0,
+            winning_shadow_trades: 0,
+            win_rate: '0.0',
+            total_shadow_pnl_sol: 0.0,
+            total_shadow_pnl_usd: 0.0,
+            counterfactual_alpha_saved_sol: 0.0,
+            counterfactual_alpha_saved_usd: 0.0,
+            recent_evaluations: []
+        };
+    }
 }
 
 function getAllStats() {
     return {
-        system: systemState,
-        instance_micro: parseLogFile(PAPER_TRADES_MICRO_PATH, 0.38),
-        instance_1sol: parseLogFile(PAPER_TRADES_1SOL_PATH, 1.0),
-        instance_10sol: parseLogFile(PAPER_TRADES_10SOL_PATH, 10.0),
-        instance_live: parseLogFile(LIVE_TRADES_PATH, liveTradingConfig.wallet_balance_sol),
-        live_config: liveTradingConfig
+        timestamp_ms: Date.now(),
+        sol_price_usd: liveSolPrice,
+        dual_leg: getDualLegStats(),
+        triangular: getTriangularStats(),
+        micro: parseLogFile(PAPER_TRADES_MICRO_PATH, 0.3800),
+        '1sol': parseLogFile(PAPER_TRADES_1SOL_PATH, 1.0000),
+        '10sol': parseLogFile(PAPER_TRADES_10SOL_PATH, 10.0000),
+        migration: parseMigrationShadowLog(),
+        tracked_tokens: getTrackedTokens(),
+        system: {
+            platform: os.platform(),
+            uptime_sec: Math.floor(os.uptime()),
+            loadavg: os.loadavg ? os.loadavg() : [0, 0, 0],
+            memory_used_mb: Math.floor((os.totalmem() - os.freemem()) / (1024 * 1024)),
+            memory_total_mb: Math.floor(os.totalmem() / (1024 * 1024)),
+            cpu_percent: 0.5
+        }
     };
 }
 
-// === LIVE CONTROL API ENDPOINTS ===
-
-app.get('/api/stats', (req, res) => {
-    res.json(getAllStats());
-});
-
-app.get('/api/live/status', (req, res) => {
-    res.json({
-        config: liveTradingConfig,
-        stats: parseLogFile(LIVE_TRADES_PATH, liveTradingConfig.wallet_balance_sol)
-    });
-});
-
-// ROBUST WALLET HANDLER: Accepts EITHER Public Key OR Private Key (Base58)
-app.post('/api/live/wallet', (req, res) => {
-    let input = (req.body.publicKey || req.body.privateKey || '').trim();
-    if (!input) return res.status(400).json({ error: 'Please provide a valid Solana Address or Private Key' });
-
-    let derivedPubkey = '';
-    let secretKeyArray = null;
-
-    try {
-        if (input.length > 50) {
-            // It is an 88-char Base58 Private Key!
-            const rawBytes = decodeBase58(input);
-            if (rawBytes.length === 64) {
-                secretKeyArray = Array.from(rawBytes);
-                // The public key is the last 32 bytes of the 64-byte secret key
-                const pubKeyBytes = rawBytes.slice(32);
-                derivedPubkey = encodeBase58(pubKeyBytes);
-
-                // Save secret key securely to ~/.config/solana/mev_live.json
-                const solDir = '/home/ubuntu/.config/solana';
-                const keyPath = path.join(solDir, 'mev_live.json');
-                if (!fs.existsSync(solDir)) fs.mkdirSync(solDir, { recursive: true });
-                fs.writeFileSync(keyPath, JSON.stringify(secretKeyArray));
-                fs.chmodSync(keyPath, 0o400);
-            } else {
-                return res.status(400).json({ error: 'Invalid secret key byte length' });
-            }
-        } else {
-            // It is a 32-44 char standard Public Key
-            derivedPubkey = input;
+function broadcast(msg) {
+    const data = JSON.stringify(msg);
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(data);
         }
+    });
+}
 
-        liveTradingConfig.wallet_pubkey = derivedPubkey;
-        saveLiveConfigToDisk();
-
-        // Fetch on-chain balance immediately
-        fetchOnChainBalance(derivedPubkey);
-
-        res.json({
-            success: true,
-            publicKey: derivedPubkey,
-            config: liveTradingConfig
-        });
-    } catch (err) {
-        console.error('Wallet parse error:', err.message);
-        res.status(400).json({ error: 'Could not decode Solana key' });
-    }
-});
-
-app.post('/api/live/config', (req, res) => {
-    const { max_position_sol, min_spread_pct, min_net_profit_sol, jito_tip_pct } = req.body;
-    if (max_position_sol !== undefined) liveTradingConfig.max_position_sol = parseFloat(max_position_sol);
-    if (min_spread_pct !== undefined) liveTradingConfig.min_spread_pct = parseFloat(min_spread_pct);
-    if (min_net_profit_sol !== undefined) liveTradingConfig.min_net_profit_sol = parseFloat(min_net_profit_sol);
-    if (jito_tip_pct !== undefined) liveTradingConfig.jito_tip_pct = parseInt(jito_tip_pct);
-
-    saveLiveConfigToDisk();
-    broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
-    res.json({ success: true, config: liveTradingConfig });
-});
-
-app.post('/api/live/control', (req, res) => {
-    const { action } = req.body;
-    if (action === 'start') {
-        liveTradingConfig.is_engine_running = true;
-        liveTradingConfig.status_label = 'LIVE ACTIVE (Trading Real SOL)';
-        saveLiveConfigToDisk();
-        exec('cd /home/ubuntu/solana-mev-arb && (pm2 restart rust-mev-arb-live || pm2 start ./target/release/solana-mev-arb --name rust-mev-arb-live -- --live)', (err) => {
-            broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
-            res.json({ success: true, status: liveTradingConfig.status_label });
-        });
-    } else if (action === 'stop' || action === 'kill') {
-        liveTradingConfig.is_engine_running = false;
-        liveTradingConfig.status_label = action === 'kill' ? 'EMERGENCY SHUTDOWN TRIGGERED' : 'PAUSED / STANDBY';
-        saveLiveConfigToDisk();
-        exec('cd /home/ubuntu/solana-mev-arb && pm2 stop rust-mev-arb-live', (err) => {
-            broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
-            res.json({ success: true, status: liveTradingConfig.status_label });
-        });
-    } else {
-        res.status(400).json({ error: 'Invalid control action' });
-    }
-});
-
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'HEALTHY', region: 'eu-central-1 (Frankfurt)', solPrice: liveSolPrice });
-});
-
-wss.on('connection', (ws) => {
+wss.on('connection', ws => {
     ws.send(JSON.stringify({ type: 'INIT', payload: getAllStats() }));
 });
 
+setInterval(() => {
+    broadcast({ type: 'TRADES_UPDATE', payload: getAllStats() });
+}, 1500);
+
+// === REST API ENDPOINTS ===
+
+app.get('/api/overview', (req, res) => {
+    res.json(getAllStats());
+});
+
+app.get('/api/tokens', (req, res) => {
+    res.json(getTrackedTokens());
+});
+
+// Dual-Leg Endpoints
+app.get('/api/dual/config', (req, res) => {
+    res.json(dualLegConfig);
+});
+
+app.post('/api/dual/config', (req, res) => {
+    const { max_position_sol, min_spread_pct, min_net_profit_sol, max_slippage_pct, jito_tip_pct, reserve_floor_sol, wallet_pubkey } = req.body;
+    if (max_position_sol !== undefined) dualLegConfig.max_position_sol = parseFloat(max_position_sol);
+    if (min_spread_pct !== undefined) dualLegConfig.min_spread_pct = parseFloat(min_spread_pct);
+    if (min_net_profit_sol !== undefined) dualLegConfig.min_net_profit_sol = parseFloat(min_net_profit_sol);
+    if (max_slippage_pct !== undefined) dualLegConfig.max_slippage_pct = parseFloat(max_slippage_pct);
+    if (jito_tip_pct !== undefined) dualLegConfig.jito_tip_pct = parseFloat(jito_tip_pct);
+    if (reserve_floor_sol !== undefined) dualLegConfig.reserve_floor_sol = parseFloat(reserve_floor_sol);
+    if (wallet_pubkey) {
+        dualLegConfig.wallet_pubkey = wallet_pubkey;
+        fetchOnChainBalance(wallet_pubkey);
+    }
+    saveDualLegConfigToDisk();
+    broadcast({ type: 'DUAL_CONFIG_UPDATE', payload: dualLegConfig });
+    res.json({ success: true, config: dualLegConfig });
+});
+
+app.post('/api/dual/control', (req, res) => {
+    const { action } = req.body;
+    if (action === 'start') {
+        dualLegConfig.is_engine_running = true;
+        dualLegConfig.status_label = 'DUAL-LEG ACTIVE (SOL ➔ Token ➔ SOL)';
+        exec('pm2 restart rust-mev-arb-dual-live || pm2 restart rust-mev-arb-live', () => {});
+    } else if (action === 'stop' || action === 'pause') {
+        dualLegConfig.is_engine_running = false;
+        dualLegConfig.status_label = 'DUAL-LEG PAUSED';
+        exec('pm2 stop rust-mev-arb-dual-live || pm2 stop rust-mev-arb-live', () => {});
+    } else if (action === 'emergency_stop') {
+        dualLegConfig.is_engine_running = false;
+        dualLegConfig.status_label = 'EMERGENCY HALT (Standby)';
+        exec('pm2 stop rust-mev-arb-dual-live', () => {});
+    }
+    saveDualLegConfigToDisk();
+    broadcast({ type: 'DUAL_CONFIG_UPDATE', payload: dualLegConfig });
+    res.json({ success: true, config: dualLegConfig });
+});
+
+// Triangular Endpoints
+app.get('/api/triangular/config', (req, res) => {
+    res.json(triangularConfig);
+});
+
+app.post('/api/triangular/config', (req, res) => {
+    const { min_pool_tvl_usd, max_pool_tvl_usd, max_position_sol, min_spread_pct, min_net_profit_sol, max_compound_slippage_pct, jito_tip_pct, reserve_floor_sol, intermediate_bridge } = req.body;
+    if (min_pool_tvl_usd !== undefined) triangularConfig.min_pool_tvl_usd = parseFloat(min_pool_tvl_usd);
+    if (max_pool_tvl_usd !== undefined) triangularConfig.max_pool_tvl_usd = parseFloat(max_pool_tvl_usd);
+    if (max_position_sol !== undefined) triangularConfig.max_position_sol = parseFloat(max_position_sol);
+    if (min_spread_pct !== undefined) triangularConfig.min_spread_pct = parseFloat(min_spread_pct);
+    if (min_net_profit_sol !== undefined) triangularConfig.min_net_profit_sol = parseFloat(min_net_profit_sol);
+    if (max_compound_slippage_pct !== undefined) triangularConfig.max_compound_slippage_pct = parseFloat(max_compound_slippage_pct);
+    if (jito_tip_pct !== undefined) triangularConfig.jito_tip_pct = parseFloat(jito_tip_pct);
+    if (reserve_floor_sol !== undefined) triangularConfig.reserve_floor_sol = parseFloat(reserve_floor_sol);
+    if (intermediate_bridge) triangularConfig.intermediate_bridge = intermediate_bridge;
+    saveTriangularConfigToDisk();
+    broadcast({ type: 'TRIANGULAR_CONFIG_UPDATE', payload: triangularConfig });
+    res.json({ success: true, config: triangularConfig });
+});
+
+app.post('/api/triangular/control', (req, res) => {
+    const { action } = req.body;
+    if (action === 'start') {
+        triangularConfig.is_engine_running = true;
+        triangularConfig.status_label = 'TRIANGULAR ACTIVE ($3k-$40k Whale Moat)';
+        exec('pm2 restart rust-mev-arb-triangular-live || pm2 restart rust-mev-arb-triangular', () => {});
+    } else if (action === 'stop' || action === 'pause') {
+        triangularConfig.is_engine_running = false;
+        triangularConfig.status_label = 'TRIANGULAR PAUSED';
+        exec('pm2 stop rust-mev-arb-triangular-live || pm2 stop rust-mev-arb-triangular', () => {});
+    } else if (action === 'emergency_stop') {
+        triangularConfig.is_engine_running = false;
+        triangularConfig.status_label = 'EMERGENCY HALT (Standby)';
+        exec('pm2 stop rust-mev-arb-triangular-live || pm2 stop rust-mev-arb-triangular', () => {});
+    }
+    saveTriangularConfigToDisk();
+    broadcast({ type: 'TRIANGULAR_CONFIG_UPDATE', payload: triangularConfig });
+    res.json({ success: true, config: triangularConfig });
+});
+
+// ============================================================================
+// V42 GLOBAL KILL SWITCH — sub-second trading halt, no process churn.
+// Creates/deletes data/KILL_SWITCH; every engine process watches that file at
+// 250ms resolution and gates dispatch BEFORE signing. Works even if this
+// dashboard is down:  touch data/KILL_SWITCH   (halt) / rm data/KILL_SWITCH (resume)
+// ============================================================================
+const KILL_SWITCH_PATH = path.join(DATA_DIR, 'KILL_SWITCH');
+
+app.get('/api/killswitch', (req, res) => {
+    res.json({ engaged: fs.existsSync(KILL_SWITCH_PATH) });
+});
+
+app.post('/api/killswitch', (req, res) => {
+    const { engaged } = req.body;
+    try {
+        if (engaged) {
+            fs.writeFileSync(KILL_SWITCH_PATH, new Date().toISOString());
+            dualLegConfig.is_engine_running = false;
+            triangularConfig.is_engine_running = false;
+            dualLegConfig.status_label = '⛔ GLOBAL KILL SWITCH ENGAGED';
+            triangularConfig.status_label = '⛔ GLOBAL KILL SWITCH ENGAGED';
+        } else {
+            if (fs.existsSync(KILL_SWITCH_PATH)) fs.unlinkSync(KILL_SWITCH_PATH);
+            dualLegConfig.is_engine_running = true;
+            triangularConfig.is_engine_running = true;
+            dualLegConfig.status_label = 'DUAL-LEG ACTIVE V42 REFLEX (Event-Driven | Multi-Region | Fire-First)';
+            triangularConfig.status_label = 'TRIANGULAR ACTIVE V42 REFLEX (Event-Driven | Multi-Region | Fire-First)';
+        }
+        saveDualLegConfigToDisk();
+        saveTriangularConfigToDisk();
+        broadcast({ type: 'KILLSWITCH_UPDATE', payload: { engaged: !!engaged } });
+        console.log(`${engaged ? '⛔' : '✅'} Kill switch ${engaged ? 'ENGAGED' : 'RELEASED'} by operator`);
+        res.json({ success: true, engaged: !!engaged });
+    } catch (e) {
+        console.error('Kill switch toggle failed:', e.message);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// Backward compatibility endpoints
+app.get('/api/live/config', (req, res) => {
+    res.json(dualLegConfig);
+});
+
+app.post('/api/live/config', (req, res) => {
+    res.json(dualLegConfig);
+});
+
+app.post('/api/live/control', (req, res) => {
+    res.json({ success: true });
+});
+
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Solana Live MEV Control Terminal running on http://0.0.0.0:${PORT}`);
+    console.log(`⚡ Decoupled Solana MEV Arbitrage Dashboard running on http://0.0.0.0:${PORT}`);
 });

@@ -1,0 +1,17 @@
+{
+  "wallet_pubkey": "AA1ihbehbPrMW4L9jWtdxJfkH76Up5F2azbeepQ1wixs",
+  "wallet_balance_sol": 0.3981,
+  "is_engine_running": true,
+  "default_trade_size_lamports": 150000000,
+  "max_position_sol": 0.15,
+  "min_spread_pct": 0.30,
+  "min_net_profit_sol": 0.00012,
+  "min_net_profit_floor_lamports": 120000,
+  "base_jito_tip_lamports": 30000,
+  "min_pool_tvl_usd": 5000.0,
+  "max_pool_tvl_usd": 2500000.0,
+  "max_slippage_pct": 0.35,
+  "jito_tip_pct": 60.0,
+  "reserve_floor_sol": 0.15,
+  "status_label": "DUAL-LEG ACTIVE V42 REFLEX (Event-Driven Triggers | Multi-Region Dispatch | Fire-First on Fresh Events | CU-Tight)"
+}

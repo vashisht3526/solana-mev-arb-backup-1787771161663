@@ -1,0 +1,245 @@
+{
+  "winningTrades": [],
+  "sampleLosing": [
+    {
+      "signature": "3J6hpKzoSB58c2ARMxEzK2AsgUybLgZQM5WKmLZ5fQTTbBZL2MBD5uHmBZ8nhyXCYpygTWkwWCWoRkgJJaxVa2JA",
+      "slot": 441178618,
+      "blockTime": "2026-08-23T14:36:05.000Z",
+      "solDelta": -0.000130304,
+      "err": {
+        "InstructionError": [
+          2,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "hops": [
+        "Meteora DLMM",
+        "Pump.fun"
+      ],
+      "cuConsumed": 133199,
+      "logsSummary": [
+        "Program 11111111111111111111111111111111 invoke [1]",
+        "Program 11111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij invoke [1]",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo invoke [2]",
+        "Program log: Instruction: Swap2",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo invoke [3]"
+      ]
+    },
+    {
+      "signature": "33UCQMtSozigVD5fRJ3e1aEmxzDoiHB5yA3zyEUx9BzFcbqHRCaUc678dxVr3zE8vunuNRy1mn576eVi1sYjAGT",
+      "slot": 441178618,
+      "blockTime": "2026-08-23T14:36:05.000Z",
+      "solDelta": -0.000111916,
+      "err": {
+        "InstructionError": [
+          2,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "hops": [
+        "Meteora DLMM",
+        "Pump.fun"
+      ],
+      "cuConsumed": 127687,
+      "logsSummary": [
+        "Program 11111111111111111111111111111111 invoke [1]",
+        "Program 11111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij invoke [1]",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo invoke [2]",
+        "Program log: Instruction: Swap2",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo invoke [3]"
+      ]
+    },
+    {
+      "signature": "Ea32pJ1GGHtFrKZoUVCPCen7aDXX5UH9eSfga9siSvEQNqGPMssYHm6CuAABKcavDQpx9SntaSRMUnnTMEBc6Pe",
+      "slot": 441178611,
+      "blockTime": "2026-08-23T14:36:02.000Z",
+      "solDelta": -0.000230663,
+      "err": null,
+      "hops": [],
+      "cuConsumed": 117344,
+      "logsSummary": [
+        "Program 11111111111111111111111111111111 invoke [1]",
+        "Program 11111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij invoke [1]",
+        "Program cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG invoke [2]",
+        "Program log: Instruction: Swap",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]"
+      ]
+    },
+    {
+      "signature": "3Qz7RdXiddwA3UbKRXbeV4TcwGGU2d2KnMVgewxmkU3XjkH2VrrdbqJUxKZ69dtMLKA5Tm2K3GiNWpanRYzyoPSz",
+      "slot": 441178592,
+      "blockTime": "2026-08-23T14:35:55.000Z",
+      "solDelta": -0.000013807,
+      "err": {
+        "InstructionError": [
+          2,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "hops": [
+        "Meteora DLMM",
+        "Pump.fun"
+      ],
+      "cuConsumed": 132964,
+      "logsSummary": [
+        "Program 11111111111111111111111111111111 invoke [1]",
+        "Program 11111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij invoke [1]",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo invoke [2]",
+        "Program log: Instruction: Swap2",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo invoke [3]"
+      ]
+    },
+    {
+      "signature": "5BPPdFobPmZ1s1oWPS2EKTe65bUHCSNATct7oLjDT12aLmRJrfWGu3yEzwLFNRosWdXfrfPd3tJ1os1qdKZEmRsb",
+      "slot": 441178585,
+      "blockTime": "2026-08-23T14:35:52.000Z",
+      "solDelta": -0.00036426,
+      "err": null,
+      "hops": [
+        "Pump.fun",
+        "Meteora DLMM"
+      ],
+      "cuConsumed": 122512,
+      "logsSummary": [
+        "Program 11111111111111111111111111111111 invoke [1]",
+        "Program 11111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij invoke [1]",
+        "Program pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA invoke [2]",
+        "Program log: Instruction: BuyExactQuoteIn",
+        "Program pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ invoke [3]"
+      ]
+    },
+    {
+      "signature": "3A6JUpoAvAkpvDf7NqTHGitP6KVjqdoNHB8hGEbbnGZf9m7FFyS7ykEh5WjkGC78rFvLwui8bPfCbHLrWtBFjkPL",
+      "slot": 441178550,
+      "blockTime": "2026-08-23T14:35:39.000Z",
+      "solDelta": -0.000013781,
+      "err": null,
+      "hops": [
+        "Meteora DLMM"
+      ],
+      "cuConsumed": 118257,
+      "logsSummary": [
+        "Program 11111111111111111111111111111111 invoke [1]",
+        "Program 11111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij invoke [1]",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo invoke [2]",
+        "Program log: Instruction: Swap2",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo invoke [3]"
+      ]
+    },
+    {
+      "signature": "sN8vdZicctcaHznJVhMbp4te4cnfhdfCZ9t6PD5Y6SpvDCXEYFaers6fCaodZkJKk3kGmSKRhYA48tyvH1tvtNg",
+      "slot": 441178529,
+      "blockTime": "2026-08-23T14:35:31.000Z",
+      "solDelta": -0.00001138,
+      "err": null,
+      "hops": [
+        "Pump.fun",
+        "Meteora DLMM"
+      ],
+      "cuConsumed": 127853,
+      "logsSummary": [
+        "Program 11111111111111111111111111111111 invoke [1]",
+        "Program 11111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij invoke [1]",
+        "Program pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA invoke [2]",
+        "Program log: Instruction: BuyExactQuoteIn",
+        "Program pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ invoke [3]"
+      ]
+    },
+    {
+      "signature": "3Zu9k9dcKxPw6ZBs2eHfpfNTKSkYvkSd78rtrc8WQtSsPdtZmpa6KhCXFJsBCgPSposUa3UZUPjibBVdUX1jLq3y",
+      "slot": 441178526,
+      "blockTime": "2026-08-23T14:35:30.000Z",
+      "solDelta": -0.000152269,
+      "err": null,
+      "hops": [],
+      "cuConsumed": 35817,
+      "logsSummary": [
+        "Program 11111111111111111111111111111111 invoke [1]",
+        "Program 11111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij invoke [1]",
+        "Program cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG invoke [2]",
+        "Program log: Instruction: Swap",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]"
+      ]
+    },
+    {
+      "signature": "599MrjsgAz9pS3UBrh9yYLRRQSQSkAJ4F2dVZGNzNiCqr3TSt8AXHuRR3fJN9faeDe5qC3pa4asBZCBJMm5HGxeP",
+      "slot": 441178526,
+      "blockTime": "2026-08-23T14:35:30.000Z",
+      "solDelta": -0.000083553,
+      "err": {
+        "InstructionError": [
+          2,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "hops": [
+        "Meteora DLMM",
+        "Orca Whirlpool"
+      ],
+      "cuConsumed": 207296,
+      "logsSummary": [
+        "Program 11111111111111111111111111111111 invoke [1]",
+        "Program 11111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij invoke [1]",
+        "Program SV2EYYJyRz2YhfXwXnhNAevDEui5Q6yrfyo13WtupPF invoke [2]",
+        "Program data: S3VCwUhV8CXSyrcV3EtPUNCsQJvXpBqCGUobEJZVRnmtKSkCAAAAAHzZSxoAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]"
+      ]
+    },
+    {
+      "signature": "2x8oCTNSEi8Wefz6VUdh8eSHQY4dNpBmHGUaiREMzVfnGtfmdiiC89zSuoikQxYtthSDHchsN6J7k9R4akZJ1Waq",
+      "slot": 441178524,
+      "blockTime": "2026-08-23T14:35:29.000Z",
+      "solDelta": -0.000018757,
+      "err": null,
+      "hops": [
+        "Meteora DLMM"
+      ],
+      "cuConsumed": 84730,
+      "logsSummary": [
+        "Program 11111111111111111111111111111111 invoke [1]",
+        "Program 11111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program AN225ksocfZpbPVEbwffiANbtUdYbySM3WJ6dbsYAqij invoke [1]",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo invoke [2]",
+        "Program log: Instruction: Swap2",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo invoke [3]"
+      ]
+    }
+  ]
+}

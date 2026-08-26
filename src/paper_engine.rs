@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::types::{ArbitrageOpportunity, PaperTradeRecord};
 use chrono::Utc;
 use log::{info, warn};
@@ -34,8 +35,26 @@ impl PaperTradingEngine {
             let _ = create_dir_all(parent);
         }
 
+        // Resume continuous balance progression from the last logged trade
+        let mut starting_bal = initial_balance_sol;
+        if let Ok(content) = std::fs::read_to_string(log_file_path) {
+            for line in content.lines().rev() {
+                let trimmed = line.trim();
+                if !trimmed.is_empty() {
+                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(trimmed) {
+                        if let Some(end_bal) = val.get("ending_wallet_balance_sol").and_then(|b| b.as_f64()) {
+                            if end_bal > 0.0 {
+                                starting_bal = end_bal;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Self {
-            virtual_wallet_balance_sol: Mutex::new(initial_balance_sol),
+            virtual_wallet_balance_sol: Mutex::new(starting_bal),
             total_trades: AtomicUsize::new(0),
             winning_trades: AtomicUsize::new(0),
             failed_trades: AtomicUsize::new(0),

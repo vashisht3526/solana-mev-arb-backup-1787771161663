@@ -1,12 +1,12 @@
 {
   "wallet_pubkey": "AA1ihbehbPrMW4L9jWtdxJfkH76Up5F2azbeepQ1wixs",
-  "wallet_balance_sol": 0.41,
+  "wallet_balance_sol": 0.3981,
   "is_engine_running": true,
-  "max_position_sol": 0.05,
+  "max_position_sol": 0.02,
   "min_spread_pct": 0.5,
-  "min_net_profit_sol": 0.0003,
+  "min_net_profit_sol": 0.0001,
   "jito_tip_pct": 25,
   "reserve_floor_sol": 0.1,
   "max_drawdown_sol": 0.05,
-  "status_label": "LIVE ACTIVE (Trading Real SOL)"
+  "status_label": "LIVE ACTIVE (Whale-Exclusion 0.018 SOL | 2-Leg & Triangular Armed)"
 }
